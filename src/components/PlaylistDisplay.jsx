@@ -113,7 +113,7 @@ const PlaylistDisplay = ({ playlist, emotion, onReset, onSave }) => {
                     </div>
                     <div className="relative z-10 pb-4">
                         <p className="uppercase text-sm font-black tracking-[0.4em] text-cyan-400 mb-4 animate-pulse">Intelligence Verified</p>
-                        <h1 className="text-8xl md:text-[8rem] font-black text-white mb-6 tracking-tighter leading-none drop-shadow-2xl uppercase selection:bg-cyan-500">{emotion?.name || 'Vibe'}</h1>
+                        <h1 className="text-7xl md:text-[6rem] font-black text-white mb-6 tracking-tighter leading-none drop-shadow-2xl uppercase selection:bg-cyan-500">{emotion?.name || 'Vibe'}</h1>
                         <div className="flex items-center space-x-4 text-sm font-black text-white/80">
                             <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center p-1.5 ring-2 ring-white/10"><img src="/logo.png" className="w-full h-full rounded-full" alt="" /></div>
                             <span className="hover:text-cyan-400 cursor-pointer uppercase tracking-widest transition-colors font-black">EmotiTunes Protocol</span>
