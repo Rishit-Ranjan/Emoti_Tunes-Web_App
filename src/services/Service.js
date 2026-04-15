@@ -180,7 +180,7 @@ Ensure youtubeId is accurate. No conversational text.`;
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
-            const text = response.text();
+            const text = await response.text();
             
             const jsonText = cleanJsonString(text);
             const parsed = JSON.parse(jsonText);
@@ -233,7 +233,7 @@ export const detectEmotionFromImage = async (base64ImageData) => {
         ]);
 
         const response = await result.response;
-        let text = response.text().trim().toLowerCase().replace(/[^a-z-]/g, '');
+        let text = (await response.text()).trim().toLowerCase().replace(/[^a-z-]/g, '');
         const moods = ['joy-anger', 'joy-surprise', 'joy-excitement', 'sad-anger', 'joy', 'sadness', 'anger', 'excitement', 'melancholy', 'peaceful'];
 
         const matchedMood = moods.find(m => text.includes(m));
@@ -275,7 +275,7 @@ Identify the user's emotion. Respond ONLY with one of these exact words: Joy, Sa
             prompt
         ]);
         const response = await result.response;
-        let text = response.text().trim().toLowerCase().replace(/[^a-z-]/g, '');
+        let text = (await response.text()).trim().toLowerCase().replace(/[^a-z-]/g, '');
 
         const moods = ['joy-anger', 'joy-surprise', 'joy-excitement', 'sad-anger', 'joy', 'sadness', 'anger', 'excitement', 'melancholy', 'peaceful'];
         const matchedMood = moods.find(m => text.includes(m));
@@ -297,8 +297,9 @@ export const checkFoundryHealth = async () => {
     if (!model) return { healthy: false, message: "❌ Gemini API Key missing or invalid" };
     try {
         const result = await model.generateContent("hi");
+        const response = await result.response;
         return {
-            healthy: !!result.response.text(),
+            healthy: !!(await response.text()),
             message: '✅ Gemini API is working'
         };
     } catch (error) {
