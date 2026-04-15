@@ -130,7 +130,7 @@ const PlaylistDisplay = ({ playlist, emotion, onReset, onSave }) => {
                        
                     </div>
 
-                    <div className="grid grid-cols-[40px_1fr_1fr] md:grid-cols-[40px_4fr_3fr_1fr] gap-8 px-8 py-5 border-b border-white/5 text-sm font-black tracking-[0.4em] text-white/70 uppercase mb-8">
+                    <div className="grid grid-cols-[45px_2fr_3fr] md:grid-cols-[45px_4fr_3fr_1fr] gap-7 px-10 py-6 border-b border-white/5 text-sm font-black tracking-[0.4em] text-white/70 uppercase mb-8">
                         <div>#</div><div>Track Origin</div><div className="hidden md:block">Sonic Profile</div><div className="text-right">Interval</div>
                     </div>
                     <div className="space-y-3 px-2">
