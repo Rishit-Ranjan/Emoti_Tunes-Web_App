@@ -1,4 +1,6 @@
-An intelligent music playlist generator that generates personalized playlists based on your current mood. Using the power of your camera and Gemini, EmotiTunes curates a unique listening experience by matching songs to your detected emotions.
+## EmotiTunes
+
+An intelligent music playlist generator that generates personalized playlists based on your current mood/emotions. Using the power of your camera and Gemini, EmotiTunes curates a unique listening experience by matching songs to your detected emotions.
 
 Note: An internet connection is required to generate the playlist and open the desired songs.
 
