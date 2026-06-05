@@ -48,7 +48,7 @@ const EmotionSelector = ({ emotions, onSelect, onOpenCamera, onOpenMic, isOfflin
                     <div className="flex-1 h-px bg-white/5"></div>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-6">
                     {emotions.map((emotion, idx) => (
                         <div 
                             key={emotion.name} 
