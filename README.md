@@ -30,12 +30,12 @@ npm install
 '''
 
 2. Create .env.local in the project root with:
-'''bash
+''' bash
 VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 '''
 
 3. Run locally:
-'''bash
+''' bash
 npm run dev
 '''
 
