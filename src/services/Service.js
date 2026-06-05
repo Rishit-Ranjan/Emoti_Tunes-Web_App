@@ -2,7 +2,7 @@ import { localML } from './LocalMLService';
 
 // ML Model API Configuration
 const ML_API_BASE = import.meta.env.VITE_ML_API_URL?.trim() || '';
-const USE_REMOTE_PLAYLIST_API = Boolean(ML_API_BASE);
+const USE_REMOTE_API = Boolean(ML_API_BASE);
 
 const api = {
     recognizeEmotion: async (audioFile) => {
@@ -191,7 +191,7 @@ const FALLBACK_PLAYLISTS = LOCAL_PLAYLISTS;
 export const generatePlaylist = async (emotion, numSongs = 10) => {
     const normalizedEmotion = normalizeEmotionKey(emotion);
 
-    if (!USE_REMOTE_PLAYLIST_API) {
+    if (!USE_REMOTE_API) {
         console.log(`🎵 Using local playlist generator for emotion: ${emotion}`);
         const songs = getLocalPlaylist(normalizedEmotion, numSongs);
         playlistCache.set(normalizedEmotion, songs);
@@ -229,13 +229,26 @@ export const generatePlaylist = async (emotion, numSongs = 10) => {
 
 // Emotion detection from camera capture (image data URL)
 export const detectEmotionFromImage = async (imageData) => {
-    console.log("📸 Image Emotion Recognition (IER) via ML Model");
+    console.log('📸 Image Emotion Recognition (IER) via Local ML Model');
     
     try {
-        // Convert data URL to Blob for upload
         const res = await fetch(imageData);
         const blob = await res.blob();
+        const detectedEmotion = await localML.detectEmotionFromImage(blob);
+        console.log(`✅ Local image model detected emotion: ${detectedEmotion}`);
+        return detectedEmotion;
+    } catch (localError) {
+        console.warn('Local image emotion detection failed:', localError.message || localError);
+    }
 
+    if (!USE_REMOTE_API) {
+        console.warn('⚠️ No image API configured; defaulting to Joy');
+        return 'Joy';
+    }
+
+    try {
+        const res = await fetch(imageData);
+        const blob = await res.blob();
         const response = await withRetry(async () => {
             return await api.recognizeEmotionImage(blob);
         }, 'image emotion detection');
@@ -250,9 +263,9 @@ export const detectEmotionFromImage = async (imageData) => {
         console.log(`✅ Detected emotion from image: ${emotion}`);
         return emotion;
     } catch (error) {
-        console.error(`❌ Image emotion detection failed:`, error.message);
-        console.warn('⚠️ Defaulting to joy');
-        return 'joy';
+        console.error(`❌ Image emotion detection failed:`, error.message || error);
+        console.warn('⚠️ Defaulting to Joy');
+        return 'Joy';
     }
 };
 
@@ -266,6 +279,11 @@ export const detectEmotionFromAudio = async (audioFile) => {
         return detectedEmotion;
     } catch (localError) {
         console.warn('Local AER failed:', localError.message || localError);
+    }
+
+    if (!USE_REMOTE_API) {
+        console.warn('⚠️ No remote audio API configured; defaulting to Joy');
+        return 'Joy';
     }
 
     try {

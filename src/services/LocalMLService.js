@@ -116,6 +116,79 @@ class LocalMLService {
         return prediction || 'Joy';
     }
 
+    async extractImageStats(imageBlob) {
+        const bitmap = await createImageBitmap(imageBlob);
+        const width = 128;
+        const height = 128;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bitmap, 0, 0, width, height);
+        const imageData = ctx.getImageData(0, 0, width, height).data;
+
+        let rSum = 0;
+        let gSum = 0;
+        let bSum = 0;
+        let satSum = 0;
+        let brightSum = 0;
+        const pixelCount = width * height;
+
+        for (let i = 0; i < imageData.length; i += 4) {
+            const r = imageData[i] / 255;
+            const g = imageData[i + 1] / 255;
+            const b = imageData[i + 2] / 255;
+            const mx = Math.max(r, g, b);
+            const mn = Math.min(r, g, b);
+            const bright = (mx + mn) / 2;
+            const sat = mx === 0 ? 0 : (mx - mn) / mx;
+
+            rSum += r;
+            gSum += g;
+            bSum += b;
+            satSum += sat;
+            brightSum += bright;
+        }
+
+        const avgR = rSum / pixelCount;
+        const avgG = gSum / pixelCount;
+        const avgB = bSum / pixelCount;
+        const brightness = brightSum / pixelCount;
+        const saturation = satSum / pixelCount;
+        const intensity = avgR + avgG + avgB;
+
+        return {
+            brightness,
+            saturation,
+            redRatio: avgR / Math.max(intensity, 0.001),
+            greenRatio: avgG / Math.max(intensity, 0.001),
+            blueRatio: avgB / Math.max(intensity, 0.001)
+        };
+    }
+
+    async detectEmotionFromImage(imageBlob) {
+        try {
+            const stats = await this.extractImageStats(imageBlob);
+            return this.predictImageEmotion(stats);
+        } catch (error) {
+            console.warn('Image emotion detection failed:', error);
+            return 'Joy';
+        }
+    }
+
+    predictImageEmotion(stats) {
+        const { brightness, saturation, redRatio, blueRatio } = stats;
+
+        if (brightness > 0.75 && saturation > 0.45) return 'Joy-Excitement';
+        if (brightness > 0.65 && saturation > 0.35) return 'Joy';
+        if (redRatio > 0.45 && brightness > 0.4) return 'Anger';
+        if (brightness < 0.35 && saturation < 0.35) return 'Sadness';
+        if (brightness < 0.55 && saturation < 0.35) return 'Melancholy';
+        if (brightness > 0.55 && saturation < 0.35) return 'Peaceful';
+        if (brightness > 0.6 && saturation > 0.55) return 'Joy-Surprise';
+        return 'Joy';
+    }
+
     predict(features) {
         if (!this.initialized || !features) return null;
 
