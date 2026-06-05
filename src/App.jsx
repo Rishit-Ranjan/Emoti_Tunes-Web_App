@@ -23,14 +23,14 @@ const App = () => {
     const [currentEmotion, setCurrentEmotion] = useState(null);
     const [playlist, setPlaylist] = useState([]);
     const [userPlaylists, setUserPlaylists] = useState([]);
+    const [, setIsSearchActive] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [error, setError] = useState(null);
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isSearchActive, setIsSearchActive] = useState(false);
-    
+
     useEffect(() => {
         const handleOnline = () => {
             setIsOffline(false);
@@ -44,6 +44,10 @@ const App = () => {
             window.removeEventListener('offline', handleOffline);
         };
     }, []);
+
+    useEffect(() => {
+        localStorage.setItem('emoti_tunes_playlists', JSON.stringify(userPlaylists));
+    }, [userPlaylists]);
 
     // Navigation Helper
     const navigateTo = (newView) => {
@@ -102,6 +106,17 @@ const App = () => {
         navigateTo('home');
     }, []);
 
+    const handleSavePlaylist = useCallback(() => {
+        if (!playlist.length || !currentEmotion) return;
+        const newSavedPlaylist = {
+            id: Date.now().toString(),
+            emotion: currentEmotion,
+            songs: [...playlist],
+            date: new Date().toLocaleDateString()
+        };
+        setUserPlaylists(prev => [newSavedPlaylist, ...prev]);
+    }, [playlist, currentEmotion]);
+
     const handleSelectSavedPlaylist = (pl) => {
         setPlaylist(pl.songs);
         setCurrentEmotion(pl.emotion);
@@ -117,6 +132,7 @@ const App = () => {
     const handleSearch = (query) => {
         setSearchQuery(query);
         if (query.trim().length > 0) {
+            setIsSearchActive(true);
             if (view !== 'search') {
                 navigateTo('search');
             }
@@ -129,8 +145,8 @@ const App = () => {
                 ))
             );
             setSearchResults(results);
-        } else if (view === 'search') {
-            goBack();
+        } else {
+            setIsSearchActive(false);
         }
     };
 
@@ -185,7 +201,15 @@ const App = () => {
             />;
             case 'camera': return <CameraView onCapture={handleCapture} onClose={goBack} onError={setError}/>;
             case 'mic': return <AudioView onCapture={handleAudioCapture} onClose={goBack} onError={setError}/>;
-            case 'playlist': return <PlaylistDisplay playlist={playlist} emotion={currentEmotion} onRefresh={handleEmotionSelect} onReset={handleReset}/>;
+            case 'playlist': return (
+                <PlaylistDisplay 
+                    playlist={playlist} 
+                    emotion={currentEmotion} 
+                    onRefresh={handleEmotionSelect} 
+                    onReset={handleReset}
+                    onSave={handleSavePlaylist}
+                />
+            );
             case 'library': return <LibraryView playlists={userPlaylists} onSelectPlaylist={handleSelectSavedPlaylist} onCreateFirstVibe={() => navigateTo('camera')} />;
             case 'search': return (
                 <div className="flex-1 p-10 bg-[#0a0a12] overflow-y-auto">
@@ -213,6 +237,7 @@ const App = () => {
                                         </div>
                                         <p className="mt-6 text-xs font-medium text-white/40 leading-relaxed uppercase tracking-wider line-clamp-2">{emotion.description}</p>
                                         
+
                                         {emotion.recommendations && (
                                             <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
                                                 <div className="flex items-center space-x-2">
@@ -294,7 +319,16 @@ const App = () => {
                     </div>
 
 
-                    <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-4">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                placeholder="Search moods, artists, tracks..."
+                                className="w-80 min-w-[240px] bg-[#0f1223] border border-white/10 rounded-full py-3 px-5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
+                            />
+                        </div>
                         <button className="flex items-center space-x-4 bg-black/60 backdrop-blur-xl py-2 px-5 rounded-full border border-white/10 group active:scale-95 transition-all text-left" onClick={() => navigateTo('profile')}>
                             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 p-0.5">
                                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Rishit%20Ranjan`} className="w-full h-full rounded-full bg-black shadow-inner" alt="" />
