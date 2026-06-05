@@ -21,11 +21,18 @@ const App = () => {
     const [historyIndex, setHistoryIndex] = useState(0);
     const [currentEmotion, setCurrentEmotion] = useState(null);
     const [playlist, setPlaylist] = useState([]);
-    const [userPlaylists, setUserPlaylists] = useState(()=> {
-        try{
-            return JSON.parse(localStorage.getItem('emoti_tunes_playlists')) || [];
-        }
-        catch{
+    const [userPlaylists, setUserPlaylists] = useState(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem('emoti_tunes_playlists')) || [];
+            return Array.isArray(saved)
+                ? saved.map(item => ({
+                    ...item,
+                    type: item.type || 'playlist',
+                    name: item.name || `${item.emotion?.name || 'Saved'} Vibe`,
+                    children: item.type === 'folder' ? item.children || [] : undefined
+                }))
+                : [];
+        } catch {
             return [];
         }
     });
@@ -116,6 +123,8 @@ const App = () => {
         if (!playlist.length || !currentEmotion) return;
         const newSavedPlaylist = {
             id: Date.now().toString(),
+            type: 'playlist',
+            name: `${currentEmotion.name} Vibe ${new Date().toLocaleDateString()}`,
             emotion: currentEmotion,
             songs: [...playlist],
             date: new Date().toLocaleDateString()
@@ -123,10 +132,109 @@ const App = () => {
         setUserPlaylists(prev => [newSavedPlaylist, ...prev]);
     }, [playlist, currentEmotion]);
 
+    const findNodeById = (nodes, nodeId) => {
+        for (const node of nodes) {
+            if (node.id === nodeId) return node;
+            if (node.type === 'folder') {
+                const found = findNodeById(node.children || [], nodeId);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    const addNodeToTree = (nodes, parentId, newNode) => {
+        if (!parentId) return [newNode, ...nodes];
+        return nodes.map(node => {
+            if (node.type === 'folder') {
+                if (node.id === parentId) {
+                    return {
+                        ...node,
+                        children: [newNode, ...(node.children || [])]
+                    };
+                }
+                return {
+                    ...node,
+                    children: addNodeToTree(node.children || [], parentId, newNode)
+                };
+            }
+            return node;
+        });
+    };
+
+    const removeNodeFromTree = (nodes, nodeId) => {
+        return nodes.reduce((acc, node) => {
+            if (node.id === nodeId) return acc;
+            if (node.type === 'folder') {
+                return [...acc, { ...node, children: removeNodeFromTree(node.children || [], nodeId) }];
+            }
+            return [...acc, node];
+        }, []);
+    };
+
+    const renameNodeInTree = (nodes, nodeId, newName) => {
+        return nodes.map(node => {
+            if (node.id === nodeId) {
+                return { ...node, name: newName };
+            }
+            if (node.type === 'folder') {
+                return { ...node, children: renameNodeInTree(node.children || [], nodeId, newName) };
+            }
+            return node;
+        });
+    };
+
+    const findNodePath = (nodes, nodeId, currentPath = []) => {
+        for (const node of nodes) {
+            if (node.id === nodeId) return [...currentPath, node.id];
+            if (node.type === 'folder') {
+                const path = findNodePath(node.children || [], nodeId, [...currentPath, node.id]);
+                if (path) return path;
+            }
+        }
+        return null;
+    };
+
+    const moveNodeInTree = (nodes, nodeId, targetFolderId) => {
+        if (nodeId === targetFolderId) return nodes;
+        const nodeToMove = findNodeById(nodes, nodeId);
+        if (!nodeToMove) return nodes;
+        if (targetFolderId) {
+            const targetPath = findNodePath(nodes, targetFolderId);
+            const movingPath = findNodePath(nodes, nodeId);
+            if (!targetPath || !movingPath) return nodes;
+            if (targetPath.includes(nodeId)) return nodes;
+        }
+        const withoutNode = removeNodeFromTree(nodes, nodeId);
+        return addNodeToTree(withoutNode, targetFolderId, nodeToMove);
+    };
+
     const handleSelectSavedPlaylist = (pl) => {
         setPlaylist(pl.songs);
         setCurrentEmotion(pl.emotion);
         navigateTo('playlist');
+    };
+
+    const handleRemovePlaylist = (playlistId) => {
+        setUserPlaylists(prev => removeNodeFromTree(prev, playlistId));
+    };
+
+    const handleCreateFolder = (folderName, parentId = null) => {
+        const newFolder = {
+            id: Date.now().toString(),
+            type: 'folder',
+            name: folderName,
+            children: []
+        };
+        setUserPlaylists(prev => addNodeToTree(prev, parentId, newFolder));
+    };
+
+    const handleRenameFolder = (folderId, newName) => {
+        setUserPlaylists(prev => renameNodeInTree(prev, folderId, newName));
+    };
+
+    const handleMoveItem = (itemId, targetFolderId = null) => {
+        setUserPlaylists(prev => moveNodeInTree(prev, itemId, targetFolderId));
     };
 
 
@@ -204,7 +312,15 @@ const App = () => {
                     onSave={handleSavePlaylist}
                 />
             );
-            case 'library': return <LibraryView playlists={userPlaylists} onSelectPlaylist={handleSelectSavedPlaylist} onCreateFirstVibe={() => navigateTo('camera')} />;
+            case 'library': return <LibraryView 
+                playlists={userPlaylists} 
+                onSelectPlaylist={handleSelectSavedPlaylist} 
+                onCreateFirstVibe={() => navigateTo('camera')} 
+                onRemovePlaylist={handleRemovePlaylist} 
+                onCreateFolder={handleCreateFolder}
+                onRenameFolder={handleRenameFolder}
+                onMoveItem={handleMoveItem}
+            />;
             case 'search': return (
                 <div className="flex-1 p-10 bg-[#0a0a12] overflow-y-auto">
                     <div className="max-w-5xl mx-auto">
