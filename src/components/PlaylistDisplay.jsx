@@ -1,70 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 
-const PlaylistDisplay = ({ playlist, emotion, onRefresh, onSave }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-    const [player, setPlayer] = useState(null);
-    const [volume, setVolume] = useState(80);
-    const [currentError, setCurrentError] = useState(null);
-    const playerRef = useRef(null);
-    const initAttempts = useRef(0);
-    const MAX_INIT_ATTEMPTS = 3;
-
-    const togglePlayPause = () => {
-        if (!player) {
-            initPlayer(); // Retry init
-            return;
-        }
-        try {
-            const state = player.getPlayerState();
-            if (state === window.YT.PlayerState.PLAYING) {
-                player.pauseVideo();
-            } else {
-                player.playVideo();
-            }
-        } catch (err) {
-            console.error('Play/pause error:', err);
-        }
+const PlaylistDisplay = ({ playlist, emotion, onRefresh, onSave, onAddSong }) => {
+    const handleAddSong = (song) => {
+        if (onAddSong) onAddSong(song);
     };
-
-    const retryCurrentSong = () => {
-        setCurrentError(null);
-        initAttempts.current = 0;
-        if (player) {
-            player.loadVideoById(currentSong.youtubeId);
-        }
-    };
-
-    const handleNext = () => {
-        setCurrentError(null);
-        if (currentIndex < playlist.length - 1) {
-            setCurrentIndex(currentIndex + 1);
-        } else {
-            setIsPlaying(false);
-        }
-    };
-
-    const handlePrev = () => {
-        setCurrentError(null);
-        if (currentIndex > 0) {
-            setCurrentIndex(currentIndex - 1);
-        }
-    };
-
-    const handleSeek = (e) => {
-        const time = Number(e.target.value);
-        setCurrentTime(time);
-        if (player?.seekTo) player.seekTo(time, true);
-    };
-    const formatTime = (time) => {
-        if (isNaN(time) || time === undefined) return "0:00";
-        const m = Math.floor(time / 60);
-        const s = Math.floor(time % 60);
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-    };
-    const getAlbumArt = (song, idx) => `https://picsum.photos/seed/${encodeURIComponent(song?.title || "vibe" + (idx || 0))}/300/300`;
 
     const getYouTubeLink = (song) => song?.youtubeId ? `https://youtube.com/watch?v=${song.youtubeId}` : null;
     const getSpotifyLink = (song) => `https://open.spotify.com/search/${encodeURIComponent(song?.title + ' ' + (song?.artist || ''))}`;
@@ -132,6 +71,18 @@ const PlaylistDisplay = ({ playlist, emotion, onRefresh, onSave }) => {
                                     </svg>
                                     <span>Spotify</span>
                                 </a>
+                                {onAddSong && (
+                                    <button
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            handleAddSong(song);
+                                        }}
+                                        className="inline-flex items-center px-4 py-2.5 bg-white/10 border border-white/15 text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-white/15 transition-all duration-300 hover:scale-[1.02] rounded-xl"
+                                    >
+                                        Add
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
