@@ -6,6 +6,7 @@ const CameraView = ({ onCapture, onClose, onError }) => {
     const canvasRef = useRef(null);
     const faceDetectorRef = useRef(null);
     const streamRef = useRef(null);
+    const isMountedRef = useRef(true);
     const [stream, setStream] = useState(null);
     const [isCapturing, setIsCapturing] = useState(false);
     const [countdown, setCountdown] = useState(null);
@@ -44,6 +45,12 @@ const CameraView = ({ onCapture, onClose, onError }) => {
             const s = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } 
             });
+
+            if (!isMountedRef.current) {
+                s.getTracks().forEach(track => track.stop());
+                return;
+            }
+
             setStream(s);
             streamRef.current = s;
             if (videoRef.current) {
@@ -60,8 +67,10 @@ const CameraView = ({ onCapture, onClose, onError }) => {
     }, [onError, closeCamera]);
 
     useEffect(() => {
+        isMountedRef.current = true;
         startCamera();
         return () => {
+            isMountedRef.current = false;
             stopCamera();
         };
     }, [startCamera, stopCamera]);
