@@ -50,7 +50,7 @@ const App = () => {
     }, [userPlaylists]);
 
     // Navigation Helper
-    const navigateTo = (newView) => {
+    const navigateTo = useCallback((newView) => {
         if (newView === view) return;
         const newHistory = history.slice(0, historyIndex + 1);
         newHistory.push(newView);
@@ -60,7 +60,7 @@ const App = () => {
         setError(null);
         setIsLoading(false);
         if (newView !== 'search') setIsSearchActive(false);
-    };
+    }, [view, history, historyIndex]);
 
     const goBack = () => {
         if (historyIndex > 0) {
@@ -96,7 +96,7 @@ const App = () => {
         finally {
             setIsLoading(false);
         }
-    }, [isOffline]);
+    }, [isOffline, navigateTo]);
 
     const handleReset = useCallback(() => {
         setCurrentEmotion(null);
@@ -104,7 +104,7 @@ const App = () => {
         setError(null);
         setIsLoading(false);
         navigateTo('home');
-    }, []);
+    }, [navigateTo]);
 
     const handleSavePlaylist = useCallback(() => {
         if (!playlist.length || !currentEmotion) return;
