@@ -25,13 +25,19 @@ An intelligent music playlist generator that generates personalized playlists ba
 **Prerequisites:**  Node.js
 
 1. Install dependencies:
+```bash
 npm install
+```
 
 2. Create .env.local in the project root with:
+```env
 VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+```
 
 3. Run locally:
+```bash
 npm run dev
+```
 
 ## 📝Notes
 1. A working internet connection is required for AI playlist generation and song playback.
