@@ -1,7 +1,8 @@
 import { localML } from './LocalMLService';
 
 // ML Model API Configuration
-const ML_API_BASE = import.meta.env.VITE_ML_API_URL || "http://localhost:5000";
+const ML_API_BASE = import.meta.env.VITE_ML_API_URL?.trim() || '';
+const USE_REMOTE_PLAYLIST_API = Boolean(ML_API_BASE);
 
 const api = {
     recognizeEmotion: async (audioFile) => {
@@ -99,40 +100,104 @@ const withRetry = async (fn, context, retries = CONFIG.retryAttempts) => {
     }
 };
 
-// Fallback playlists for when API is unavailable
-const FALLBACK_PLAYLISTS = {
-    'calm': [
-        { title: "Weightless", artist: "Marconi Union", duration: 480, bpm: 60 },
-        { title: "Music for Airports", artist: "Brian Eno", duration: 1260, bpm: 55 },
-        { title: "Sunrise", artist: "Ólafur Arnalds", duration: 240, bpm: 65 },
-        { title: "Re: Stacks", artist: "Bon Iver", duration: 300, bpm: 70 },
-        { title: "Nuvole Bianche", artist: "Ludovico Einaudi", duration: 270, bpm: 68 },
-    ],
-    'happy': [
+// Local playlist map for offline / backend-free mode
+const LOCAL_PLAYLISTS = {
+    joy: [
         { title: "Walking On Sunshine", artist: "Katrina & The Waves", duration: 240, bpm: 128 },
         { title: "Good As Hell", artist: "Lizzo", duration: 160, bpm: 98 },
         { title: "Levitating", artist: "Dua Lipa", duration: 203, bpm: 103 },
         { title: "Electric Feel", artist: "MGMT", duration: 234, bpm: 105 },
         { title: "Shut Up and Dance", artist: "Walk the Moon", duration: 210, bpm: 115 },
     ],
-    'energetic': [
-        { title: "Eye of the Tiger", artist: "Survivor", duration: 246, bpm: 108 },
-        { title: "Pump It Up", artist: "Endor", duration: 233, bpm: 128 },
-        { title: "Kickstart My Heart", artist: "Mötley Crüe", duration: 239, bpm: 112 },
-        { title: "We Will Rock You", artist: "Queen", duration: 302, bpm: 78 },
-        { title: "Thunderstruck", artist: "AC/DC", duration: 292, bpm: 120 },
+    sadness: [
+        { title: "Someone Like You", artist: "Adele", duration: 285, bpm: 67 },
+        { title: "Fix You", artist: "Coldplay", duration: 294, bpm: 69 },
+        { title: "Yesterday", artist: "The Beatles", duration: 125, bpm: 74 },
+        { title: "Skinny Love", artist: "Bon Iver", duration: 235, bpm: 86 },
+        { title: "The Night We Met", artist: "Lord Huron", duration: 219, bpm: 73 },
     ],
-    'uplifting': [
-        { title: "Here Comes the Sun", artist: "The Beatles", duration: 185, bpm: 129 },
-        { title: "Three Little Birds", artist: "Bob Marley", duration: 181, bpm: 76 },
-        { title: "Don't Stop Me Now", artist: "Queen", duration: 236, bpm: 156 },
-        { title: "I Will Survive", artist: "Gloria Gaynor", duration: 315, bpm: 117 },
+    anger: [
+        { title: "Break Stuff", artist: "Limp Bizkit", duration: 212, bpm: 74 },
+        { title: "Killing In The Name", artist: "Rage Against The Machine", duration: 314, bpm: 86 },
+        { title: "Bulls On Parade", artist: "Rage Against The Machine", duration: 255, bpm: 105 },
+        { title: "Bodies", artist: "Drowning Pool", duration: 203, bpm: 94 },
+        { title: "Duality", artist: "Slipknot", duration: 239, bpm: 112 },
+    ],
+    excitement: [
+        { title: "Can't Stop", artist: "Red Hot Chili Peppers", duration: 269, bpm: 116 },
+        { title: "Thunderstruck", artist: "AC/DC", duration: 292, bpm: 120 },
+        { title: "Mr. Brightside", artist: "The Killers", duration: 221, bpm: 148 },
+        { title: "Uptown Funk", artist: "Mark Ronson ft. Bruno Mars", duration: 269, bpm: 115 },
+        { title: "Shake It Off", artist: "Taylor Swift", duration: 242, bpm: 160 },
+    ],
+    melancholy: [
+        { title: "Creep", artist: "Radiohead", duration: 238, bpm: 92 },
+        { title: "Hurt", artist: "Johnny Cash", duration: 219, bpm: 75 },
+        { title: "The Night We Met", artist: "Lord Huron", duration: 219, bpm: 73 },
+        { title: "Say Something", artist: "A Great Big World", duration: 239, bpm: 72 },
+        { title: "The Scientist", artist: "Coldplay", duration: 311, bpm: 61 },
+    ],
+    peaceful: [
+        { title: "Weightless", artist: "Marconi Union", duration: 480, bpm: 60 },
+        { title: "Music for Airports", artist: "Brian Eno", duration: 1260, bpm: 55 },
+        { title: "River Flows In You", artist: "Yiruma", duration: 190, bpm: 70 },
+        { title: "Clair de Lune", artist: "Claude Debussy", duration: 300, bpm: 60 },
+        { title: "Sunrise", artist: "Ólafur Arnalds", duration: 240, bpm: 65 },
+    ],
+    'joy-anger': [
+        { title: "Power", artist: "Kanye West", duration: 291, bpm: 100 },
+        { title: "Survivor", artist: "Destiny's Child", duration: 243, bpm: 81 },
+        { title: "Eye of the Tiger", artist: "Survivor", duration: 245, bpm: 110 },
+        { title: "Stronger", artist: "Kanye West", duration: 311, bpm: 104 },
         { title: "Believer", artist: "Imagine Dragons", duration: 204, bpm: 123 },
     ],
+    'joy-surprise': [
+        { title: "September", artist: "Earth, Wind & Fire", duration: 210, bpm: 126 },
+        { title: "Uptown Funk", artist: "Mark Ronson ft. Bruno Mars", duration: 269, bpm: 115 },
+        { title: "Sugar", artist: "Maroon 5", duration: 235, bpm: 120 },
+        { title: "Happy", artist: "Pharrell Williams", duration: 233, bpm: 160 },
+        { title: "Dancing Queen", artist: "ABBA", duration: 230, bpm: 100 },
+    ],
+    'joy-excitement': [
+        { title: "Levitating", artist: "Dua Lipa", duration: 203, bpm: 103 },
+        { title: "Shut Up and Dance", artist: "Walk The Moon", duration: 210, bpm: 115 },
+        { title: "Shake It Off", artist: "Taylor Swift", duration: 242, bpm: 160 },
+        { title: "Don't Stop Me Now", artist: "Queen", duration: 236, bpm: 156 },
+        { title: "Dynamite", artist: "BTS", duration: 199, bpm: 114 },
+    ],
+    'sad-anger': [
+        { title: "In the End", artist: "Linkin Park", duration: 216, bpm: 105 },
+        { title: "Numb", artist: "Linkin Park", duration: 185, bpm: 110 },
+        { title: "Liability", artist: "Lorde", duration: 240, bpm: 60 },
+        { title: "Hurt", artist: "Nine Inch Nails", duration: 386, bpm: 82 },
+        { title: "Bring Me to Life", artist: "Evanescence", duration: 242, bpm: 96 },
+    ]
 };
+
+const normalizeEmotionKey = (emotion) => {
+    if (!emotion) return 'joy';
+    return emotion.toString().trim().toLowerCase().replace(/\s+/g, '-');
+};
+
+const getLocalPlaylist = (emotion, numSongs) => {
+    const key = normalizeEmotionKey(emotion);
+    const playlist = LOCAL_PLAYLISTS[key] || LOCAL_PLAYLISTS.joy;
+    return playlist.slice(0, numSongs);
+};
+
+const FALLBACK_PLAYLISTS = LOCAL_PLAYLISTS;
 
 // Generate playlist from emotion
 export const generatePlaylist = async (emotion, numSongs = 10) => {
+    const normalizedEmotion = normalizeEmotionKey(emotion);
+
+    if (!USE_REMOTE_PLAYLIST_API) {
+        console.log(`🎵 Using local playlist generator for emotion: ${emotion}`);
+        const songs = getLocalPlaylist(normalizedEmotion, numSongs);
+        playlistCache.set(normalizedEmotion, songs);
+        return songs;
+    }
+
     try {
         console.log(`🎵 Generating playlist for emotion: ${emotion}`);
         
@@ -157,8 +222,8 @@ export const generatePlaylist = async (emotion, numSongs = 10) => {
     } catch (error) {
         console.error(`❌ Playlist generation failed:`, error.message);
         console.warn('⚠️ Using fallback playlist');
-        const mood = emotion.toLowerCase();
-        return FALLBACK_PLAYLISTS[mood] || FALLBACK_PLAYLISTS.happy;
+        const mood = normalizeEmotionKey(emotion);
+        return FALLBACK_PLAYLISTS[mood] || FALLBACK_PLAYLISTS.joy;
     }
 };
 
