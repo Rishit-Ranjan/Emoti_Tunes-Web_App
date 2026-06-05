@@ -34,6 +34,11 @@ const CameraView = ({ onCapture, onClose, onError }) => {
         }
     }, []);
 
+    const closeCamera = useCallback(() => {
+        stopCamera();
+        onClose();
+    }, [onClose, stopCamera]);
+
     const startCamera = useCallback(async () => {
         try {
             const s = await navigator.mediaDevices.getUserMedia({ 
@@ -43,18 +48,16 @@ const CameraView = ({ onCapture, onClose, onError }) => {
             streamRef.current = s;
             if (videoRef.current) {
                 videoRef.current.srcObject = s;
+                videoRef.current.play().catch(err => {
+                    console.warn('Video play was prevented:', err);
+                });
             }
         } catch (err) {
             console.error("Camera access error:", err);
             onError("Could not access camera. Please check permissions.");
             closeCamera();
         }
-    }, [onError]);
-
-    const closeCamera = useCallback(() => {
-        stopCamera();
-        onClose();
-    }, [onClose, stopCamera]);
+    }, [onError, closeCamera]);
 
     useEffect(() => {
         startCamera();
@@ -138,10 +141,10 @@ const CameraView = ({ onCapture, onClose, onError }) => {
     };
 
     const cameraContent = (
-        <div className="fixed top-0 bottom-0 left-72 right-0 z-40 flex items-center justify-center p-4 md:p-8 animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
-            <div className="absolute inset-0 bg-[#0a0a12]/95 backdrop-blur-3xl" onClick={closeCamera}></div>
-            
-            <div className="relative w-full max-w-6xl aspect-video bg-[#12121e] rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(139,92,246,0.3)] border border-violet-500/20 flex flex-col group">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050714]/95 backdrop-blur-2xl animate-in fade-in duration-500 overflow-hidden">
+            <div className="absolute inset-0 bg-black/70" onClick={closeCamera}></div>
+
+            <div className="relative w-full max-w-6xl h-[calc(100vh-6rem)] bg-[#12121e] rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(139,92,246,0.3)] border border-violet-500/20 flex flex-col">
                 {/* Video Feed */}
                 <div className="relative flex-1 bg-black">
                     <video 
@@ -153,38 +156,40 @@ const CameraView = ({ onCapture, onClose, onError }) => {
                     />
                     
                     {/* UI Overlays */}
-                    <div className="absolute inset-0 flex flex-col justify-between p-8 pointer-events-none">
+                    <div className="absolute inset-0 flex flex-col justify-between p-6 pointer-events-none">
                         <div className="flex justify-between items-start">
-                            <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/10 flex items-center space-x-3">
-                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                            <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 flex items-center space-x-3">
+                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Live Emotion Feed</span>
                             </div>
                             <button 
                                 onClick={closeCamera}
-                                className="w-12 h-12 rounded-2xl bg-black/40 hover:bg-red-500/20 text-white backdrop-blur-xl transition-all border border-white/10 pointer-events-auto flex items-center justify-center group/btn"
+                                className="w-12 h-12 rounded-3xl bg-black/40 hover:bg-red-500/20 text-white backdrop-blur-xl transition-all border border-white/10 pointer-events-auto flex items-center justify-center"
+                                title="Close camera"
                             >
-                                <svg className="w-6 h-6 group-hover/btn:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <svg className="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
 
                         {countdown && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-9xl md:text-[15rem] font-black text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.5)] animate-ping">{countdown}</span>
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span className="text-8xl md:text-[12rem] font-black text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.5)] animate-pulse">{countdown}</span>
                             </div>
                         )}
 
                         <div className="absolute inset-x-0 top-6 flex justify-center pointer-events-none">
-                            <div className="bg-black/70 backdrop-blur-xl px-5 py-2 rounded-2xl border border-violet-500/40 text-white flex items-center space-x-3 max-w-[90vw] md:max-w-xl">
+                            <div className="bg-black/80 backdrop-blur-xl px-5 py-2 rounded-2xl border border-violet-500/40 text-white flex items-center space-x-3 max-w-[90vw] md:max-w-xl">
                                 <div className={`w-3 h-3 rounded-full ${isFaceVisible ? 'bg-emerald-400 animate-pulse' : 'bg-red-400 animate-pulse'}`}></div>
                                 <span className="text-sm md:text-base font-bold text-cyan-300 leading-tight text-center whitespace-nowrap">{faceStatus}</span>
                             </div>
                         </div>
 
                         {isFaceVisible && !isCapturing && !countdown && (
-                            <div className="absolute bottom-24 left-0 right-0 flex justify-center pointer-events-auto">
+                            <div className="absolute bottom-8 left-0 right-0 flex justify-center pointer-events-auto">
                                 <button
                                     onClick={capturePhoto}
-                                    className="uppercase text-xs tracking-widest px-6 py-3 rounded-full bg-violet-600 hover:bg-violet-500 border border-white/30 text-white font-black shadow-[0_0_30px_rgba(139,92,246,0.35)] transition-all"
+                                    disabled={!isFaceVisible}
+                                    className="uppercase text-xs tracking-widest px-8 py-4 rounded-full bg-violet-600 hover:bg-violet-500 border border-white/20 text-white font-black shadow-[0_0_30px_rgba(139,92,246,0.35)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     Capture Photo
                                 </button>
@@ -193,21 +198,13 @@ const CameraView = ({ onCapture, onClose, onError }) => {
                     </div>
                 </div>
 
-                {/* Controls */}
-                <div className="h-28 bg-[#12121e] border-t border-white/5 flex items-center justify-center px-10 relative">
+                {/* Footer Bar */}
+                <div className="h-24 bg-[#12121e] border-t border-white/5 flex items-center justify-center px-10 relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-violet-600/5 to-cyan-500/5 pointer-events-none"></div>
-                    
-                    <button 
-                        onClick={capturePhoto}
-                        disabled={isCapturing || !isFaceVisible}
-                        className="w-20 h-20 rounded-full bg-white p-1 hover:scale-110 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] disabled:opacity-50 disabled:scale-100 group/shutter"
-                    >
-                        <div className="w-full h-full rounded-full border-4 border-black group-hover/shutter:border-violet-600 transition-colors flex items-center justify-center">
-                            <div className="w-12 h-12 bg-black rounded-full transition-all group-hover/shutter:scale-75"></div>
-                        </div>
-                    </button>
-
-                    <canvas ref={canvasRef} className="hidden" />
+                    <div className="relative z-10 flex items-center gap-4 text-xs uppercase tracking-[0.25em] font-black text-white/60">
+                        <span>Face detection is {window.FaceDetector ? 'supported' : 'not supported'}</span>
+                        <span className="text-cyan-300">Camera ready</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -217,3 +214,4 @@ const CameraView = ({ onCapture, onClose, onError }) => {
 };
 
 export default CameraView;
+
