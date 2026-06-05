@@ -122,11 +122,6 @@ const App = () => {
         navigateTo('playlist');
     };
 
-    const recentPlaylists = userPlaylists.slice(0, 6).map(pl => ({
-        ...pl,
-        preview: pl.songs[0] || { title: 'No tracks', artist: 'Unknown' },
-        trackCount: pl.songs?.length || 0
-    }));
 
     const handleSearch = (query) => {
         setSearchQuery(query);
