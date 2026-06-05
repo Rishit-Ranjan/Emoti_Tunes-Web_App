@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const PlaylistDisplay = ({ playlist, emotion, onRefresh }) => {
+const PlaylistDisplay = ({ playlist, emotion, onRefresh, onSave }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -11,8 +11,6 @@ const PlaylistDisplay = ({ playlist, emotion, onRefresh }) => {
     const playerRef = useRef(null);
     const initAttempts = useRef(0);
     const MAX_INIT_ATTEMPTS = 3;
-
-
 
     const togglePlayPause = () => {
         if (!player) {
@@ -94,6 +92,13 @@ const PlaylistDisplay = ({ playlist, emotion, onRefresh }) => {
                 >
                     <svg className="w-4 h-4 group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     <span>New Vibe</span>
+                </button>
+                <button
+                    onClick={onSave}
+                    disabled={!playlist || playlist.length === 0}
+                    className="group flex items-center space-x-2 px-6 py-3 bg-cyan-600/10 hover:bg-cyan-600/20 border border-cyan-400/20 rounded-2xl text-sm font-black uppercase tracking-[0.2em] text-cyan-200 hover:text-white transition-all duration-300 disabled:opacity-40"
+                >
+                    <span>Save</span>
                 </button>
             </div>
 

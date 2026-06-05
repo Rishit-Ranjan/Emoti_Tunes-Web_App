@@ -21,7 +21,14 @@ const App = () => {
     const [historyIndex, setHistoryIndex] = useState(0);
     const [currentEmotion, setCurrentEmotion] = useState(null);
     const [playlist, setPlaylist] = useState([]);
-    const [userPlaylists, setUserPlaylists] = useState([]);
+    const [userPlaylists, setUserPlaylists] = useState(()=> {
+        try{
+            return JSON.parse(localStorage.getItem('emoti_tunes_playlists')) || [];
+        }
+        catch{
+            return [];
+        }
+    });
     const [, setIsSearchActive] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
