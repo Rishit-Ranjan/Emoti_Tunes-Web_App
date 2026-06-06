@@ -351,9 +351,7 @@ const isLikely404ModelError = (error) => {
 
 const geminiGenerate = async ({ systemPrompt, userPrompt }) => {
   assertGemini();
-
-  // Try multiple model IDs in order. This avoids hardcoding one model that may be disabled/renamed.
-  // Also attempt to discover models from the account, and intersect with the preferred list.
+  
   const preferredFallbacks = [
     'gemini-2.5-flash',
   ];
