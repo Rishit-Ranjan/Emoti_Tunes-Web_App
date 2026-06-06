@@ -177,7 +177,7 @@ class LocalMLService {
     }
 
     predictImageEmotion(stats) {
-        const { brightness, saturation, redRatio, blueRatio } = stats;
+        const { brightness, saturation, redRatio, } = stats;
 
         if (brightness > 0.75 && saturation > 0.45) return 'Joy-Excitement';
         if (brightness > 0.65 && saturation > 0.35) return 'Joy';
