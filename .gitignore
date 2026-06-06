@@ -28,4 +28,4 @@ dist-ssr
 .venv
 backend/datasets/
 backend/models/
-training/dataset/
+
