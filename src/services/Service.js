@@ -314,7 +314,7 @@ const getSupportedGeminiModel = async () => {
     listed ||
     [];
 
-  const toId = (m) => m?.model || m?.name || m?.id || m?.displayName;
+  const toId = (m) => (m?.model || m?.name || m?.id || m?.displayName || '').toString();
 
   // Prefer known text-capable models.
   const preferred = [
@@ -323,14 +323,28 @@ const getSupportedGeminiModel = async () => {
     'gemini-1.5-flash-latest',
     'gemini-2.5-flash',
     'gemini-1.0-pro',
+    'text-bison-001',
+    'text-bison',
+    'chat-bison-001',
+    'models/text-bison-001',
+    'models/chat-bison-001'
   ];
 
+  const normalizedCandidates = Array.isArray(candidates)
+    ? candidates.map((m) => ({ original: m, id: toId(m), lowerId: toId(m).toLowerCase() }))
+    : [];
+
   for (const p of preferred) {
-    const hit = Array.isArray(candidates)
-      ? candidates.find((m) => toId(m) === p)
-      : null;
-    if (hit) return hit;
+    const hit = normalizedCandidates.find((item) => item.lowerId === p.toLowerCase());
+    if (hit) return hit.original;
   }
+
+  const fuzzy = normalizedCandidates.find((item) =>
+    item.lowerId.includes('gemini') ||
+    item.lowerId.includes('bison') ||
+    item.lowerId.includes('chat')
+  );
+  if (fuzzy) return fuzzy.original;
 
   // If none of the preferred exist, return the first candidate.
   return Array.isArray(candidates) ? candidates[0] || null : null;
@@ -356,6 +370,11 @@ const geminiGenerate = async ({ systemPrompt, userPrompt }) => {
     'gemini-1.5-flash-latest',
     'gemini-2.5-flash',
     'gemini-1.0-pro',
+    'text-bison-001',
+    'text-bison',
+    'chat-bison-001',
+    'models/text-bison-001',
+    'models/chat-bison-001'
   ];
 
   let discovered = null;
@@ -365,7 +384,10 @@ const geminiGenerate = async ({ systemPrompt, userPrompt }) => {
     console.warn('⚠️ Gemini model listing failed:', e?.message || e);
   }
 
-  const discoveredId = discovered?.model || discovered?.name || discovered?.id;
+  const discoveredId =
+    typeof discovered === 'string'
+      ? discovered
+      : discovered?.model || discovered?.name || discovered?.id || null;
   const modelsToTry = [discoveredId, ...preferredFallbacks].filter(Boolean);
   const uniqueModelsToTry = [...new Set(modelsToTry)];
 

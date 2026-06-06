@@ -111,8 +111,7 @@ const CameraView = ({ onCapture, onClose, onError }) => {
     const capturePhoto = () => {
         if (isCapturing) return;
         if (!isFaceVisible) {
-            setFaceStatus('Cannot capture: no face visible');
-            return;
+            setFaceStatus('Face not detected - capturing anyway.');
         }
 
         setIsCapturing(true);
@@ -193,14 +192,13 @@ const CameraView = ({ onCapture, onClose, onError }) => {
                             </div>
                         </div>
 
-                        {isFaceVisible && !isCapturing && !countdown && (
+                        {!isCapturing && !countdown && (
                             <div className="absolute bottom-8 left-0 right-0 flex justify-center pointer-events-auto">
                                 <button
                                     onClick={capturePhoto}
-                                    disabled={!isFaceVisible}
-                                    className="uppercase text-xs tracking-widest px-8 py-4 rounded-full bg-violet-600 hover:bg-violet-500 border border-white/20 text-white font-black shadow-[0_0_30px_rgba(139,92,246,0.35)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="uppercase text-xs tracking-widest px-8 py-4 rounded-full bg-violet-600 hover:bg-violet-500 border border-white/20 text-white font-black shadow-[0_0_30px_rgba(139,92,246,0.35)] transition-all hover:scale-[1.02] active:scale-95"
                                 >
-                                    Capture Photo
+                                    {isFaceVisible ? 'Capture Photo' : 'Capture Anyway'}
                                 </button>
                             </div>
                         )}
