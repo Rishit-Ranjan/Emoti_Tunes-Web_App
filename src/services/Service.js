@@ -8,6 +8,11 @@ import { localML } from './LocalMLService';
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim() || '';
 const HAS_GEMINI = Boolean(GEMINI_API_KEY);
 
+// ==============================
+// Backend API (for local ML model)
+// ==============================
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 const genAI = HAS_GEMINI ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 
 const CONFIG = {
@@ -295,59 +300,8 @@ const ensurePlaylistLength = (songs, mood, targetLength) => {
 };
 
 const getSupportedGeminiModel = async () => {
-  // Discover models and return best guess of a working model id/name.
-  if (!genAI) throw new Error('Gemini client missing');
-
-  const modelService = genAI.getModel();
-  if (!modelService?.listModels) throw new Error('ModelService.listModels not available');
-
-  const listed = await modelService.listModels();
-
-  // The SDK’s listModels() return shape has varied across versions:
-  // - { models: [...] }
-  // - { model: [...] }
-  // - [...] 
-  const candidates =
-    listed?.models ||
-    listed?.model?.models ||
-    listed?.model ||
-    listed ||
-    [];
-
-  const toId = (m) => (m?.model || m?.name || m?.id || m?.displayName || '').toString();
-
-  // Prefer known text-capable models.
-  const preferred = [
-    'gemini-1.5-pro-latest',
-    'gemini-1.5-pro',
-    'gemini-1.5-flash-latest',
-    'gemini-2.5-flash',
-    'gemini-1.0-pro',
-    'text-bison-001',
-    'text-bison',
-    'chat-bison-001',
-    'models/text-bison-001',
-    'models/chat-bison-001'
-  ];
-
-  const normalizedCandidates = Array.isArray(candidates)
-    ? candidates.map((m) => ({ original: m, id: toId(m), lowerId: toId(m).toLowerCase() }))
-    : [];
-
-  for (const p of preferred) {
-    const hit = normalizedCandidates.find((item) => item.lowerId === p.toLowerCase());
-    if (hit) return hit.original;
-  }
-
-  const fuzzy = normalizedCandidates.find((item) =>
-    item.lowerId.includes('gemini') ||
-    item.lowerId.includes('bison') ||
-    item.lowerId.includes('chat')
-  );
-  if (fuzzy) return fuzzy.original;
-
-  // If none of the preferred exist, return the first candidate.
-  return Array.isArray(candidates) ? candidates[0] || null : null;
+  // Directly target Gemini 1.5 Flash for multimodal stability on v1beta
+  return 'gemini-1.5-flash';
 };
 
 const isLikely404ModelError = (error) => {
@@ -365,16 +319,9 @@ const geminiGenerate = async ({ systemPrompt, userPrompt }) => {
   // Try multiple model IDs in order. This avoids hardcoding one model that may be disabled/renamed.
   // Also attempt to discover models from the account, and intersect with the preferred list.
   const preferredFallbacks = [
-    'gemini-1.5-pro-latest',
+    'gemini-1.5-flash',
     'gemini-1.5-pro',
-    'gemini-1.5-flash-latest',
-    'gemini-2.5-flash',
-    'gemini-1.0-pro',
-    'text-bison-001',
-    'text-bison',
-    'chat-bison-001',
-    'models/text-bison-001',
-    'models/chat-bison-001'
+    'gemini-1.0-pro'
   ];
 
   let discovered = null;
@@ -481,6 +428,25 @@ export const generatePlaylist = async (emotion, numSongs = 10) => {
 // Emotion from image (Local ML)
 export const detectEmotionFromImage = async (imageData) => {
   try {
+    // 1. Try Backend Detection first
+    try {
+      const imageBlob = dataUrlToBlob(imageData);
+      const formData = new FormData();
+      formData.append('file', imageBlob, 'capture.jpg');
+      
+      const response = await fetch(`${BACKEND_URL}/analyze-image`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.emotion) return result.emotion;
+      }
+    } catch (e) {
+      console.warn('Backend image detection failed, falling back to local/Gemini:', e.message);
+    }
+
     const imageBlob = dataUrlToBlob(imageData);
     const predictedEmotion = await localML.detectEmotionFromImage(imageBlob);
     return predictedEmotion || 'Joy';
@@ -495,11 +461,13 @@ export const detectEmotionFromImage = async (imageData) => {
       const systemPrompt =
         'You are an emotion recognition assistant. Output ONLY a single JSON object: {"predicted_emotion": string}.';
 
-      const userPrompt =
-        `Analyze the emotions in this image and choose the closest emotion label from this list: ` +
-        `Joy, Sadness, Anger, Excitement, Melancholy, Peaceful, Joy-Anger, Joy-Surprise, Joy-Excitement, Sad-Anger.\n` +
-        `Return predicted_emotion exactly as one of those labels.\n\n` +
-        `Image data URL (base64):\n${imageData}`;
+      const [mimeInfo, base64Data] = imageData.split(',');
+      const mimeType = mimeInfo.match(/:(.*?);/)?.[1] || 'image/jpeg';
+
+      const userPrompt = [
+        { text: "Analyze the emotions in this image and choose from: Joy, Sadness, Anger, Excitement, Melancholy, Peaceful, Joy-Anger, Joy-Surprise, Joy-Excitement, Sad-Anger. Return predicted_emotion in a JSON object." },
+        { inlineData: { mimeType, data: base64Data } }
+      ];
 
       const text = await withRetry(
         () => geminiGenerate({ systemPrompt, userPrompt }),
@@ -522,6 +490,24 @@ export const detectEmotionFromImage = async (imageData) => {
 // Emotion from audio (Local ML)
 export const detectEmotionFromAudio = async (audioFile) => {
   try {
+    // 1. Try Backend Detection first
+    try {
+      const formData = new FormData();
+      formData.append('file', audioFile, 'recording.webm');
+      
+      const response = await fetch(`${BACKEND_URL}/analyze-audio`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.emotion) return result.emotion;
+      }
+    } catch (e) {
+      console.warn('Backend audio detection failed, falling back to local/Gemini:', e.message);
+    }
+
     const predictedEmotion = await localML.detectEmotionFromAudio(audioFile);
     return predictedEmotion || 'Joy';
   } catch (error) {
@@ -541,16 +527,14 @@ export const detectEmotionFromAudio = async (audioFile) => {
       }
       const base64 = btoa(binary);
       const mime = audioFile.type || 'audio/webm';
-      const dataUrl = `data:${mime};base64,${base64}`;
 
       const systemPrompt =
         'You are an emotion recognition assistant. Output ONLY a single JSON object: {"predicted_emotion": string}.';
 
-      const userPrompt =
-        `Analyze the emotion in this audio and choose the closest emotion label from this list: ` +
-        `Joy, Sadness, Anger, Excitement, Melancholy, Peaceful, Joy-Anger, Joy-Surprise, Joy-Excitement, Sad-Anger.\n` +
-        `Return predicted_emotion exactly as one of those labels.\n\n` +
-        `Audio data URL (base64):\n${dataUrl}`;
+      const userPrompt = [
+        { text: "Analyze the emotion in this audio and choose from: Joy, Sadness, Anger, Excitement, Melancholy, Peaceful, Joy-Anger, Joy-Surprise, Joy-Excitement, Sad-Anger. Return predicted_emotion in a JSON object." },
+        { inlineData: { mimeType: mime, data: base64 } }
+      ];
 
       const text = await withRetry(
         () => geminiGenerate({ systemPrompt, userPrompt }),
@@ -603,4 +587,3 @@ export const checkMLHealth = async () => {
 };
 
 export const checkFoundryHealth = checkMLHealth;
-

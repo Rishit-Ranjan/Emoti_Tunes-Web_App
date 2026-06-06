@@ -108,6 +108,42 @@ const CameraView = ({ onCapture, onClose, onError }) => {
         return () => clearInterval(interval);
     }, [stream]);
 
+    const executeCapture = useCallback(() => {
+        const video = videoRef.current;
+        if (!video || video.readyState < 2) {
+            setIsCapturing(false);
+            return;
+        }
+
+        // Use a transient canvas to avoid conflicts with the face detection interval
+        const captureCanvas = document.createElement('canvas');
+        const context = captureCanvas.getContext('2d');
+        
+        captureCanvas.width = video.videoWidth || 1280;
+        captureCanvas.height = video.videoHeight || 720;
+        context.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+        
+        const imageData = captureCanvas.toDataURL('image/jpeg', 0.9);
+        if (onCapture) onCapture(imageData);
+        
+        setIsCapturing(false);
+        setFaceStatus('Captured! Generating mood');
+    }, [onCapture]);
+
+    useEffect(() => {
+        if (countdown === null) return;
+
+        if (countdown > 0) {
+            const timer = setTimeout(() => {
+                setCountdown(prev => prev - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else {
+            executeCapture();
+            setCountdown(null);
+        }
+    }, [countdown, executeCapture]);
+
     const capturePhoto = () => {
         if (isCapturing) return;
         if (!isFaceVisible) {
@@ -116,36 +152,6 @@ const CameraView = ({ onCapture, onClose, onError }) => {
 
         setIsCapturing(true);
         setCountdown(3);
-
-        const timer = setInterval(() => {
-            setCountdown(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    executeCapture();
-                    return null;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-    };
-
-    const executeCapture = () => {
-        if (!videoRef.current || !canvasRef.current) {
-            setIsCapturing(false);
-            return;
-        }
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-        
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        onCapture(imageData);
-        setIsCapturing(false);
-        setFaceStatus('Captured! Generating mood');
     };
 
     const cameraContent = (
@@ -162,6 +168,7 @@ const CameraView = ({ onCapture, onClose, onError }) => {
                         muted 
                         className={`w-full h-full object-cover transition-all duration-700 ${isCapturing && !countdown ? 'brightness-150 scale-105' : ''}`}
                     />
+                    <canvas ref={canvasRef} className="hidden" />
                     
                     {/* UI Overlays */}
                     <div className="absolute inset-0 flex flex-col justify-between p-6 pointer-events-none">
@@ -221,4 +228,3 @@ const CameraView = ({ onCapture, onClose, onError }) => {
 };
 
 export default CameraView;
-
