@@ -476,14 +476,19 @@ export const detectEmotionFromImage = async (imageData) => {
   try {
     // 1. Try Backend Detection first
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
       const imageBlob = dataUrlToBlob(imageData);
       const formData = new FormData();
       formData.append('file', imageBlob, 'capture.jpg');
       
       const response = await fetch(`${BACKEND_URL}/analyze-image`, {
         method: 'POST',
-        body: formData
+        body: formData,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const result = await response.json();
@@ -538,13 +543,18 @@ export const detectEmotionFromAudio = async (audioFile) => {
   try {
     // 1. Try Backend Detection first
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
       const formData = new FormData();
       formData.append('file', audioFile, 'recording.webm');
       
       const response = await fetch(`${BACKEND_URL}/analyze-audio`, {
         method: 'POST',
-        body: formData
+        body: formData,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const result = await response.json();

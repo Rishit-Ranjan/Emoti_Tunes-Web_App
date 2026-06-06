@@ -169,6 +169,7 @@ class LocalMLService {
     async detectEmotionFromImage(imageBlob) {
         try {
             const stats = await this.extractImageStats(imageBlob);
+            console.log('📊 Local Image Stats (Heuristic Mode):', stats);
             return this.predictImageEmotion(stats);
         } catch (error) {
             console.warn('Image emotion detection failed:', error);
