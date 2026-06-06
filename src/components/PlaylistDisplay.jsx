@@ -45,7 +45,7 @@ const PlaylistDisplay = ({ playlist, emotion, onRefresh, onSave, onAddSong, fold
 
             <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-4">
                 <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-[40px_1fr_1fr] md:grid-cols-[40px_3fr_2fr_140px] gap-6 text-sm font-black uppercase tracking-[0.3em] text-white/50 mb-6">
+                    <div className="grid grid-cols-[40px_1fr_1fr_minmax(180px,220px)] md:grid-cols-[40px_3fr_2fr_minmax(220px,18rem)] gap-6 text-sm font-black uppercase tracking-[0.3em] text-white/50 mb-6">
                         <div>#</div>
                         <div>Title</div>
                         <div className="hidden md:block">Artist</div>
@@ -74,14 +74,14 @@ const PlaylistDisplay = ({ playlist, emotion, onRefresh, onSave, onAddSong, fold
                 
                 {playlist.map((song, index) => (
                     <div key={index} className="group bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-cyan-400/50 rounded-2xl p-6 md:p-8 transition-all duration-300 hover:shadow-[0_10px_40px_rgba(0,0,0,0.3)] hover:scale-[1.02] cursor-pointer">
-                        <div className="grid grid-cols-[40px_1fr_1fr_140px] md:gap-8 items-center h-full">
+                        <div className="grid grid-cols-[40px_1fr_1fr_minmax(180px,220px)] md:grid-cols-[40px_3fr_2fr_minmax(220px,18rem)] md:gap-8 items-center h-full">
                             <div className="text-center font-black text-xl text-cyan-400">{index + 1}</div>
-                            <div className="space-y-1">
+                            <div className="space-y-1 min-w-0">
                                 <div className="text-xl md:text-2xl font-black text-white truncate leading-tight">{song.title}</div>
-                                <div className="text-xs font-black uppercase tracking-wider text-violet-300">{song.artist}</div>
+                                <div className="text-xs font-black uppercase tracking-wider text-violet-300 truncate">{song.artist}</div>
                             </div>
-                            <div className="text-xs font-black text-white/60 uppercase tracking-wider truncate">AI Vibe Match</div>
-                            <div className="flex space-x-3 justify-end">
+                            <div className="text-xs font-black text-white/60 uppercase tracking-wider truncate min-w-0">AI Vibe Match</div>
+                            <div className="flex space-x-3 justify-end min-w-0">
                                 {getYouTubeLink(song) && (
                                     <a href={getYouTubeLink(song)} target="_blank" rel="noopener noreferrer" className="group/link flex items-center space-x-1 px-4 py-2.5 bg-gradient-to-r from-red-600/20 to-red-500/20 backdrop-blur-sm border border-red-400/30 hover:border-red-400 hover:from-red-600/40 hover:to-red-500/40 text-xs font-black uppercase tracking-[0.2em] text-white hover:text-red-200 shadow-[0_4px_20px_rgba(239,68,68,0.2)] hover:shadow-[0_8px_30px_rgba(239,68,68,0.3)] transition-all duration-300 hover:scale-105 active:scale-95 rounded-xl" title={`YouTube: ${song.title}`}>
                                         <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.433L15.818 12zm-1.36-7.415L15.818 12 8.185 15.568V8.153z"/></svg>

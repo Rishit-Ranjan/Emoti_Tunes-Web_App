@@ -5,7 +5,6 @@ import { localML } from './LocalMLService';
 // Gemini API (direct from frontend)
 
 // ==============================
-// NOTE: Exposing API keys in the browser is insecure. Use an API proxy for production.
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim() || '';
 const HAS_GEMINI = Boolean(GEMINI_API_KEY);
 
@@ -69,6 +68,13 @@ const LOCAL_PLAYLISTS = {
     { title: 'Levitating', artist: 'Dua Lipa', duration: 203, bpm: 103 },
     { title: 'Electric Feel', artist: 'MGMT', duration: 234, bpm: 105 },
     { title: 'Shut Up and Dance', artist: 'Walk the Moon', duration: 210, bpm: 115 },
+    { title: 'Happy', artist: 'Pharrell Williams', duration: 233, bpm: 160 },
+    { title: 'Dancing Queen', artist: 'ABBA', duration: 230, bpm: 100 },
+    { title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', duration: 269, bpm: 115 },
+    { title: 'September', artist: 'Earth, Wind & Fire', duration: 210, bpm: 126 },
+    { title: 'Can’t Stop the Feeling!', artist: 'Justin Timberlake', duration: 235, bpm: 120 },
+    { title: '24K Magic', artist: 'Bruno Mars', duration: 228, bpm: 109 },
+    { title: 'Good Time', artist: 'Owl City ft. Carly Rae Jepsen', duration: 215, bpm: 128 },
   ],
   sadness: [
     { title: 'Someone Like You', artist: 'Adele', duration: 285, bpm: 67 },
@@ -178,6 +184,68 @@ const extractJsonArrayFromText = (text) => {
   return null;
 };
 
+const parseSongEntriesFromRawText = (text) => {
+  if (!text) return [];
+
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const songs = [];
+  let current = { title: '', artist: '' };
+
+  const pushCurrent = () => {
+    if (current.title && current.artist) {
+      songs.push({ title: current.title, artist: current.artist });
+    }
+    current = { title: '', artist: '' };
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.replace(/^[0-9]+[.)\s]+/, '').replace(/^[-*\s]+/, '').trim();
+    const kvMatch = line.match(/^(title|track|song)\s*[:-]\s*['"]?(.*?)['"]?$/i);
+    if (kvMatch) {
+      current.title = kvMatch[2].trim();
+      continue;
+    }
+
+    const artistMatch = line.match(/^(artist|by)\s*[:-]\s*['"]?(.*?)['"]?$/i);
+    if (artistMatch) {
+      current.artist = artistMatch[2].trim();
+      continue;
+    }
+
+    const titleArtistMatch = line.match(/^(?:['"])?(.+?)(?:['"])?\s*(?:[-–—]|by)\s*(?:['"])?(.+?)(?:['"])?$/i);
+    if (titleArtistMatch && titleArtistMatch[1] && titleArtistMatch[2]) {
+      pushCurrent();
+      songs.push({
+        title: titleArtistMatch[1].trim(),
+        artist: titleArtistMatch[2].trim(),
+      });
+      continue;
+    }
+
+    if (current.title && !current.artist) {
+      const fallbackArtist = line.replace(/^(by|artist)\s*[:-]?\s*/i, '').trim();
+      if (fallbackArtist) {
+        current.artist = fallbackArtist;
+        continue;
+      }
+    }
+
+    if (!current.title && !current.artist) {
+      const fallbackMatch = line.match(/^(?:['"])?(.+?)['"]?\s*[-–—]\s*(?:['"])?(.+?)['"]?$/i);
+      if (fallbackMatch) {
+        songs.push({ title: fallbackMatch[1].trim(), artist: fallbackMatch[2].trim() });
+      }
+    }
+  }
+
+  pushCurrent();
+  return songs.filter((song) => song.title && song.artist).slice(0, 20);
+};
+
 const extractJsonSongsFromText = (text) => {
   // Accept either [ {song...} ] or { songs: [...] }
   const arr = extractJsonArrayFromText(text);
@@ -196,6 +264,13 @@ const extractJsonSongsFromText = (text) => {
   }
 
   return null;
+};
+
+const extractSongsFromText = (text) => {
+  const songs = extractJsonSongsFromText(text);
+  if (Array.isArray(songs) && songs.length > 0) return songs;
+  const rawParsed = parseSongEntriesFromRawText(text);
+  return rawParsed.length > 0 ? rawParsed : null;
 };
 
 const ensurePlaylistLength = (songs, mood, targetLength) => {
@@ -219,20 +294,110 @@ const ensurePlaylistLength = (songs, mood, targetLength) => {
   return filled.slice(0, targetLength);
 };
 
+const getSupportedGeminiModel = async () => {
+  // Discover models and return best guess of a working model id/name.
+  if (!genAI) throw new Error('Gemini client missing');
+
+  const modelService = genAI.getModel();
+  if (!modelService?.listModels) throw new Error('ModelService.listModels not available');
+
+  const listed = await modelService.listModels();
+
+  // The SDK’s listModels() return shape has varied across versions:
+  // - { models: [...] }
+  // - { model: [...] }
+  // - [...] 
+  const candidates =
+    listed?.models ||
+    listed?.model?.models ||
+    listed?.model ||
+    listed ||
+    [];
+
+  const toId = (m) => m?.model || m?.name || m?.id || m?.displayName;
+
+  // Prefer known text-capable models.
+  const preferred = [
+    'gemini-1.5-pro-latest',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash-latest',
+    'gemini-2.5-flash',
+    'gemini-1.0-pro',
+  ];
+
+  for (const p of preferred) {
+    const hit = Array.isArray(candidates)
+      ? candidates.find((m) => toId(m) === p)
+      : null;
+    if (hit) return hit;
+  }
+
+  // If none of the preferred exist, return the first candidate.
+  return Array.isArray(candidates) ? candidates[0] || null : null;
+};
+
+const isLikely404ModelError = (error) => {
+  const msg = error?.message || '';
+  const status = error?.status || error?.code;
+  return (
+    status === 404 ||
+    /404/.test(msg) && /models\//i.test(msg) && /not found/i.test(msg)
+  );
+};
+
 const geminiGenerate = async ({ systemPrompt, userPrompt }) => {
   assertGemini();
 
-  const model = genAI.getGenerativeModel({
-    // NOTE: Your current SDK may not support gemini-1.5-pro.
-    // Use a broadly-supported model name.
-    model: 'gemini-1.5-flash',
-    systemInstruction: systemPrompt,
-  });
+  // Try multiple model IDs in order. This avoids hardcoding one model that may be disabled/renamed.
+  // Also attempt to discover models from the account, and intersect with the preferred list.
+  const preferredFallbacks = [
+    'gemini-1.5-pro-latest',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash-latest',
+    'gemini-2.5-flash',
+    'gemini-1.0-pro',
+  ];
 
-  const result = await model.generateContent(userPrompt);
-  const response = await result.response;
-  return response.text();
+  let discovered = null;
+  try {
+    discovered = await getSupportedGeminiModel();
+  } catch (e) {
+    console.warn('⚠️ Gemini model listing failed:', e?.message || e);
+  }
+
+  const discoveredId = discovered?.model || discovered?.name || discovered?.id;
+  const modelsToTry = [discoveredId, ...preferredFallbacks].filter(Boolean);
+  const uniqueModelsToTry = [...new Set(modelsToTry)];
+
+
+
+  let lastError;
+  for (const modelName of uniqueModelsToTry) {
+    try {
+      console.info(`🎛️ Gemini trying model: ${modelName}`);
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: systemPrompt,
+      });
+
+      const result = await model.generateContent(userPrompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      lastError = error;
+      // If model is wrong/unsupported, continue to next model.
+      if (isLikely404ModelError(error)) {
+        console.warn(`⚠️ Model not found/unsupported (${modelName}), trying next...`, error?.message || error);
+        continue;
+      }
+      // For other errors, still try next once if it looks model-related.
+      console.warn(`⚠️ Gemini request failed for model (${modelName}), trying next (if any)...`, error?.message || error);
+    }
+  }
+
+  throw lastError || new Error('Gemini generation failed');
 };
+
 
 // ==============================
 // Exports expected by the UI
@@ -264,8 +429,9 @@ export const generatePlaylist = async (emotion, numSongs = 10) => {
       `generatePlaylist(${emotion})`
     );
 
-    const songs = extractJsonSongsFromText(text);
+    const songs = extractSongsFromText(text);
     if (!Array.isArray(songs) || songs.length === 0) {
+      console.warn('⚠️ Gemini playlist response could not be parsed as songs:', text);
       throw new Error('Gemini did not return songs array');
     }
 
