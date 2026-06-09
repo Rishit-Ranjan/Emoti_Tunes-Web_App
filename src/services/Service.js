@@ -296,7 +296,7 @@ const extractSongsFromText = (text) => {
 const ensurePlaylistLength = (songs, mood, targetLength) => {
   if (!Array.isArray(songs)) songs = [];
   const normalizedMood = normalizeEmotionKey(mood);
-  const baseList = FALLBACK_PLAYLISTS[normalizedMood] || FALLBACK_PLAYLISTS.joy;
+  const baseList = FALLBACK_PLAYLISTS[normalizedMood] || FALLBACK_PLAYLISTS.happy;
   const filled = [...songs];
   let fallbackIndex = 0;
 
@@ -444,7 +444,7 @@ export const generatePlaylist = async (emotion, numSongs = 10) => {
     console.error('❌ Gemini playlist generation failed:', error?.message || error);
     console.warn('⚠️ Using fallback playlist');
     const mood = normalizeEmotionKey(emotion);
-    return (FALLBACK_PLAYLISTS[mood] || FALLBACK_PLAYLISTS.joy).slice(0, numSongs);
+    return (FALLBACK_PLAYLISTS[mood] || FALLBACK_PLAYLISTS.happy).slice(0, numSongs);
   }
 };
 
@@ -477,12 +477,12 @@ export const detectEmotionFromImage = async (imageData) => {
 
     const imageBlob = dataUrlToBlob(imageData);
     const predictedEmotion = await localML.detectEmotionFromImage(imageBlob);
-    return predictedEmotion || 'Joy';
+    return predictedEmotion || 'happy';
   } catch (error) {
     console.error('❌ Local image emotion detection failed:', error?.message || error);
 
     if (!HAS_GEMINI) {
-      return 'Joy';
+      return 'happy';
     }
 
     try {
@@ -507,10 +507,10 @@ export const detectEmotionFromImage = async (imageData) => {
       if (start === -1 || end === -1 || end <= start) throw new Error('No JSON found in response');
 
       const obj = JSON.parse(text.slice(start, end + 1));
-      return obj?.predicted_emotion || 'Joy';
+      return obj?.predicted_emotion || 'happy';
     } catch (fallbackError) {
       console.error('❌ Gemini fallback image emotion detection failed:', fallbackError?.message || fallbackError);
-      return 'Joy';
+      return 'happy';
     }
   }
 };
@@ -579,10 +579,10 @@ export const detectEmotionFromAudio = async (audioFile) => {
       if (start === -1 || end === -1 || end <= start) throw new Error('No JSON found in response');
 
       const obj = JSON.parse(text.slice(start, end + 1));
-      return obj?.predicted_emotion || 'Joy';
+      return obj?.predicted_emotion || 'happy';
     } catch (fallbackError) {
       console.error('❌ Gemini fallback audio emotion detection failed:', fallbackError?.message || fallbackError);
-      return 'Joy';
+      return 'happy';
     }
   }
 };
