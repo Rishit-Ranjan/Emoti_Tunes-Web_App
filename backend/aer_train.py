@@ -12,13 +12,12 @@ from tqdm import tqdm
 
 EMOTION_MAP = {
     '01': 'neutral',
-    '02': 'calm',
     '03': 'happy',
     '04': 'sad',
     '05': 'angry',
-    '06': 'fearful',
+    '06': 'fear',
     '07': 'disgust',
-    '08': 'surprised'
+    '08': 'pleasant'
 }
 
 def extract_features(file_path, sample_rate=22050, n_mfcc=40):
@@ -59,19 +58,19 @@ def parse_tess_label(file_path):
     parent_folder = os.path.basename(os.path.dirname(file_path)).lower()
 
     if 'angry' in basename or 'angry' in parent_folder:
-        return 'Anger'
+        return 'angry'
     if 'disgust' in basename or 'disgust' in parent_folder:
-        return 'Anger'
+        return 'disgust'
     if 'fear' in basename or 'fear' in parent_folder:
-        return 'Melancholy'
+        return 'fear'
     if 'happy' in basename or 'happy' in parent_folder:
-        return 'Joy'
+        return 'happy'
     if 'sad' in basename or 'sadness' in basename or 'sad' in parent_folder or 'sadness' in parent_folder:
-        return 'Sadness'
+        return 'sad'
     if 'neutral' in basename or 'neutral' in parent_folder:
-        return 'Peaceful'
+        return 'neutral'
     if 'surprise' in basename or 'pleasant' in basename or 'surprise' in parent_folder or 'pleasant' in parent_folder:
-        return 'Joy-Surprise'
+        return 'pleasant'
     return None
 
 

@@ -415,7 +415,25 @@ const App = () => {
                     </div>
                 </div>
             );
-            default: return <EmotionSelector emotions={EMOTIONS} onSelect={handleEmotionSelect} onOpenCamera={() => navigateTo('camera')} onOpenMic={() => navigateTo('mic')} isOffline={isOffline}/>;
+            default: {
+                const AUDIO_MOODS = ['angry', 'fear', 'happy', 'disgust', 'neutral', 'pleasant', 'sad'];
+                const filteredEmotions = EMOTIONS.filter(e => {
+                    const n = e.name.toLowerCase();
+                    return AUDIO_MOODS.includes(n) || ['joy', 'sadness', 'anger', 'melancholy', 'peaceful', 'joy-surprise', 'sad-anger'].includes(n);
+                }).map(e => {
+                    const n = e.name.toLowerCase();
+                    if (n === 'joy') return { ...e, name: 'happy' };
+                    if (n === 'sadness') return { ...e, name: 'sad' };
+                    if (n === 'anger') return { ...e, name: 'angry' };
+                    if (n === 'melancholy') return { ...e, name: 'fear' };
+                    if (n === 'peaceful') return { ...e, name: 'neutral' };
+                    if (n === 'joy-surprise') return { ...e, name: 'pleasant' };
+                    if (n === 'sad-anger') return { ...e, name: 'disgust' };
+                    return { ...e, name: n };
+                }).filter(e => AUDIO_MOODS.includes(e.name));
+
+                return <EmotionSelector emotions={filteredEmotions} onSelect={handleEmotionSelect} onOpenCamera={() => navigateTo('camera')} onOpenMic={() => navigateTo('mic')} isOffline={isOffline}/>;
+            }
         }
     };
 

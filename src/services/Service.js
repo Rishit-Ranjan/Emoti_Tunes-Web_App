@@ -67,7 +67,7 @@ const playlistCache = new ResponseCache();
 // Offline fallback playlists
 // ==============================
 const LOCAL_PLAYLISTS = {
-  joy: [
+  happy: [
     { title: 'Walking On Sunshine', artist: 'Katrina & The Waves', duration: 240, bpm: 128 },
     { title: 'Good As Hell', artist: 'Lizzo', duration: 160, bpm: 98 },
     { title: 'Levitating', artist: 'Dua Lipa', duration: 203, bpm: 103 },
@@ -81,63 +81,42 @@ const LOCAL_PLAYLISTS = {
     { title: '24K Magic', artist: 'Bruno Mars', duration: 228, bpm: 109 },
     { title: 'Good Time', artist: 'Owl City ft. Carly Rae Jepsen', duration: 215, bpm: 128 },
   ],
-  sadness: [
+  sad: [
     { title: 'Someone Like You', artist: 'Adele', duration: 285, bpm: 67 },
     { title: 'Fix You', artist: 'Coldplay', duration: 294, bpm: 69 },
     { title: 'Yesterday', artist: 'The Beatles', duration: 125, bpm: 74 },
     { title: 'Skinny Love', artist: 'Bon Iver', duration: 235, bpm: 86 },
     { title: 'The Night We Met', artist: 'Lord Huron', duration: 219, bpm: 73 },
   ],
-  anger: [
+  angry: [
     { title: 'Break Stuff', artist: 'Limp Bizkit', duration: 212, bpm: 74 },
     { title: 'Killing In The Name', artist: 'Rage Against The Machine', duration: 314, bpm: 86 },
     { title: 'Bulls On Parade', artist: 'Rage Against The Machine', duration: 255, bpm: 105 },
     { title: 'Bodies', artist: 'Drowning Pool', duration: 203, bpm: 94 },
     { title: 'Duality', artist: 'Slipknot', duration: 239, bpm: 112 },
   ],
-  excitement: [
-    { title: "Can't Stop", artist: 'Red Hot Chili Peppers', duration: 269, bpm: 116 },
-    { title: 'Thunderstruck', artist: 'AC/DC', duration: 292, bpm: 120 },
-    { title: 'Mr. Brightside', artist: 'The Killers', duration: 221, bpm: 148 },
-    { title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', duration: 269, bpm: 115 },
-    { title: 'Shake It Off', artist: 'Taylor Swift', duration: 242, bpm: 160 },
-  ],
-  melancholy: [
+  fear: [
     { title: 'Creep', artist: 'Radiohead', duration: 238, bpm: 92 },
     { title: 'Hurt', artist: 'Johnny Cash', duration: 219, bpm: 75 },
     { title: 'The Night We Met', artist: 'Lord Huron', duration: 219, bpm: 73 },
     { title: 'Say Something', artist: 'A Great Big World', duration: 239, bpm: 72 },
     { title: 'The Scientist', artist: 'Coldplay', duration: 311, bpm: 61 },
   ],
-  peaceful: [
+  neutral: [
     { title: 'Weightless', artist: 'Marconi Union', duration: 480, bpm: 60 },
     { title: 'Music for Airports', artist: 'Brian Eno', duration: 1260, bpm: 55 },
     { title: 'River Flows In You', artist: 'Yiruma', duration: 190, bpm: 70 },
     { title: 'Clair de Lune', artist: 'Claude Debussy', duration: 300, bpm: 60 },
     { title: 'Sunrise', artist: 'Ólafur Arnalds', duration: 240, bpm: 65 },
   ],
-  'joy-anger': [
-    { title: 'Power', artist: 'Kanye West', duration: 291, bpm: 100 },
-    { title: "Survivor", artist: "Destiny's Child", duration: 243, bpm: 81 },
-    { title: 'Eye of the Tiger', artist: 'Survivor', duration: 245, bpm: 110 },
-    { title: 'Stronger', artist: 'Kanye West', duration: 311, bpm: 104 },
-    { title: 'Believer', artist: 'Imagine Dragons', duration: 204, bpm: 123 },
-  ],
-  'joy-surprise': [
+  pleasant: [
     { title: 'September', artist: 'Earth, Wind & Fire', duration: 210, bpm: 126 },
     { title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', duration: 269, bpm: 115 },
     { title: 'Sugar', artist: 'Maroon 5', duration: 235, bpm: 120 },
     { title: 'Happy', artist: 'Pharrell Williams', duration: 233, bpm: 160 },
     { title: 'Dancing Queen', artist: 'ABBA', duration: 230, bpm: 100 },
   ],
-  'joy-excitement': [
-    { title: 'Levitating', artist: 'Dua Lipa', duration: 203, bpm: 103 },
-    { title: 'Shut Up and Dance', artist: 'Walk The Moon', duration: 210, bpm: 115 },
-    { title: 'Shake It Off', artist: 'Taylor Swift', duration: 242, bpm: 160 },
-    { title: "Don't Stop Me Now", artist: 'Queen', duration: 236, bpm: 156 },
-    { title: 'Dynamite', artist: 'BTS', duration: 199, bpm: 114 },
-  ],
-  'sad-anger': [
+  disgust: [
     { title: 'In the End', artist: 'Linkin Park', duration: 216, bpm: 105 },
     { title: 'Numb', artist: 'Linkin Park', duration: 185, bpm: 110 },
     { title: 'Liability', artist: 'Lorde', duration: 240, bpm: 60 },
@@ -147,7 +126,7 @@ const LOCAL_PLAYLISTS = {
 };
 
 const normalizeEmotionKey = (emotion) => {
-  if (!emotion) return 'joy';
+  if (!emotion) return 'neutral';
   return emotion.toString().trim().toLowerCase().replace(/\s+/g, '-');
 };
 
@@ -514,7 +493,7 @@ export const detectEmotionFromImage = async (imageData) => {
       const mimeType = mimeInfo.match(/:(.*?);/)?.[1] || 'image/jpeg';
 
       const userPrompt = [
-        { text: "Analyze the emotions in this image and choose from: Joy, Sadness, Anger, Excitement, Melancholy, Peaceful, Joy-Anger, Joy-Surprise, Joy-Excitement, Sad-Anger. Return predicted_emotion in a JSON object." },
+        { text: "Analyze the emotions in this image and choose from: angry, fear, happy, disgust, neutral, pleasant, sad. Return predicted_emotion in a JSON object." },
         { inlineData: { mimeType, data: base64Data } }
       ];
 
@@ -586,7 +565,7 @@ export const detectEmotionFromAudio = async (audioFile) => {
         'You are an emotion recognition assistant. Output ONLY a single JSON object: {"predicted_emotion": string}.';
 
       const userPrompt = [
-        { text: "Analyze the emotion in this audio and choose from: Joy, Sadness, Anger, Excitement, Melancholy, Peaceful, Joy-Anger, Joy-Surprise, Joy-Excitement, Sad-Anger. Return predicted_emotion in a JSON object." },
+        { text: "Analyze the emotion in this audio and choose from: angry, fear, happy, disgust, neutral, pleasant, sad. Return predicted_emotion in a JSON object." },
         { inlineData: { mimeType: mime, data: base64 } }
       ];
 
