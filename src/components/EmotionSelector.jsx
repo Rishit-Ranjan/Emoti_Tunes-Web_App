@@ -57,7 +57,7 @@ const EmotionSelector = ({ emotions, onSelect, onOpenCamera, onOpenMic, isOfflin
                         >
                             <div className="w-full aspect-square rounded-2xl mb-5 shadow-2xl relative overflow-hidden bg-[#0a0a12]">
                                 <img 
-                                    src={`https://picsum.photos/seed/${emotion.name + idx}/300/300`} 
+                                    src={new URL(`../assets/Emotion_Icons/${emotion.name}.png`, import.meta.url).href} 
                                     alt={emotion.name} 
                                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
                                 />
