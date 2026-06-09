@@ -6,7 +6,7 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models # type: ignore
 import librosa
 from tqdm import tqdm
 
