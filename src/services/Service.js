@@ -542,12 +542,12 @@ export const detectEmotionFromAudio = async (audioFile) => {
     }
 
     const predictedEmotion = await localML.detectEmotionFromAudio(audioFile);
-    return predictedEmotion || 'Joy';
+    return predictedEmotion || 'happy';
   } catch (error) {
     console.error('❌ Local audio emotion detection failed:', error?.message || error);
 
     if (!HAS_GEMINI) {
-      return 'Joy';
+      return 'happy';
     }
 
     try {

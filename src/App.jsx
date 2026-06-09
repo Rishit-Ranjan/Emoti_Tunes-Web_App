@@ -8,23 +8,6 @@ import CameraView from './components/CameraView';
 import AudioView from './components/AudioView';
 import LibraryView from './components/LibraryView';
 
-const AUDIO_MOODS = ['angry', 'fear', 'happy', 'disgust', 'neutral', 'pleasant', 'sad'];
-
-const MAPPED_EMOTIONS = EMOTIONS.filter(e => {
-    const n = e.name.toLowerCase();
-    return AUDIO_MOODS.includes(n) || ['joy', 'sadness', 'anger', 'melancholy', 'peaceful', 'joy-surprise', 'sad-anger'].includes(n);
-}).map(e => {
-    const n = e.name.toLowerCase();
-    if (n === 'joy') return { ...e, name: 'happy' };
-    if (n === 'sadness') return { ...e, name: 'sad' };
-    if (n === 'anger') return { ...e, name: 'angry' };
-    if (n === 'melancholy') return { ...e, name: 'fear' };
-    if (n === 'peaceful') return { ...e, name: 'neutral' };
-    if (n === 'joy-surprise') return { ...e, name: 'pleasant' };
-    if (n === 'sad-anger') return { ...e, name: 'disgust' };
-    return { ...e, name: n };
-}).filter(e => AUDIO_MOODS.includes(e.name));
-
 const OfflineBanner = () => (<div className="fixed top-0 left-0 right-0 bg-slate-800 border-b border-yellow-500/30 text-center p-2 text-sm text-yellow-300 z-50 flex items-center justify-center shadow-lg" role="status">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 010 12.728m-2.828-2.828a5 5 0 010-7.072m-2.828-2.828a1 1 0 010-1.414A1 1 0 0111.314 3a1 1 0 011.414 0l.001.001.001.001a1 1 0 010 1.414m-2.828 2.828a1 1 0 010 1.414m-2.829-1.414a5 5 0 000 7.072m-2.828 2.828a9 9 0 0012.728 0M1 1l22 22"/>
@@ -294,7 +277,7 @@ const App = () => {
             if (view !== 'search') {
                 navigateTo('search');
             }
-            const results = MAPPED_EMOTIONS.filter(e => 
+            const results = EMOTIONS.filter(e =>
                 e.name.toLowerCase().includes(query.toLowerCase()) || 
                 e.description.toLowerCase().includes(query.toLowerCase()) ||
                 (e.recommendations && e.recommendations.some(s => 
@@ -313,8 +296,8 @@ const App = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const detectedName = await detectEmotionFromImage(imageData);
-            const matched = MAPPED_EMOTIONS.find(e => e.name.toLowerCase() === detectedName.toLowerCase()) || MAPPED_EMOTIONS[0];
+            const detectedName = await detectEmotionFromImage(imageData); // detectedName will be one of the 7 new emotions
+            const matched = EMOTIONS.find(e => e.name.toLowerCase() === detectedName.toLowerCase()) || EMOTIONS[0]; // Search in the updated EMOTIONS
             await handleEmotionSelect(matched);
         } catch (err) {
             setError(err.message);
@@ -327,8 +310,8 @@ const App = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const detectedName = await detectEmotionFromAudio(data);
-            const matched = MAPPED_EMOTIONS.find(e => e.name.toLowerCase() === detectedName.toLowerCase()) || MAPPED_EMOTIONS[0];
+            const detectedName = await detectEmotionFromAudio(data); // detectedName will be one of the 7 new emotions
+            const matched = EMOTIONS.find(e => e.name.toLowerCase() === detectedName.toLowerCase()) || EMOTIONS[0]; // Search in the updated EMOTIONS
             await handleEmotionSelect(matched);
         } catch (err) {
             setError(err.message);
@@ -432,7 +415,7 @@ const App = () => {
                     </div>
                 </div>
             );
-            default: return <EmotionSelector emotions={MAPPED_EMOTIONS} onSelect={handleEmotionSelect} onOpenCamera={() => navigateTo('camera')} onOpenMic={() => navigateTo('mic')} isOffline={isOffline}/>;
+            default: return <EmotionSelector emotions={EMOTIONS} onSelect={handleEmotionSelect} onOpenCamera={() => navigateTo('camera')} onOpenMic={() => navigateTo('mic')} isOffline={isOffline}/>;
         }
     };
 
@@ -462,7 +445,6 @@ const App = () => {
                         <div className="w-6 h-6 group-hover:scale-110"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 4v16m8-8H4"/></svg></div>
                         <span className="font-black uppercase text-xs tracking-[0.2em]">New Vibe</span>
                     </button>
-                    
 
 
                 </nav>

@@ -1,7 +1,7 @@
 import { HappyIcon, SadIcon, AngryIcon, JoyfulIcon, MelancholyIcon, EnergeticIcon } from './components/icons/EmotionIcons';
 export const EMOTIONS = [
     {
-        name: 'Joy',
+        name: 'happy',
         description: 'Feeling upbeat and happy.',
         icon: HappyIcon,
         color: 'text-yellow-300',
@@ -13,7 +13,7 @@ export const EMOTIONS = [
         ]
     },
     {
-        name: 'Sadness',
+        name: 'sad',
         description: 'For quiet, reflective moments.',
         icon: SadIcon,
         color: 'text-blue-300',
@@ -25,7 +25,7 @@ export const EMOTIONS = [
         ]
     },
     {
-        name: 'Anger',
+        name: 'angry',
         description: 'To channel your frustration.',
         icon: AngryIcon,
         color: 'text-red-400',
@@ -37,7 +37,7 @@ export const EMOTIONS = [
         ]
     },
     {
-        name: 'Excitement',
+        name: 'pleasant', // Mapped from Excitement
         description: 'High-energy and thrilling.',
         icon: JoyfulIcon,
         color: 'text-orange-400',
@@ -49,7 +49,7 @@ export const EMOTIONS = [
         ]
     },
     {
-        name: 'Melancholy',
+        name: 'fear', // Mapped from Melancholy
         description: 'Bittersweet and thoughtful.',
         icon: MelancholyIcon,
         color: 'text-indigo-300',
@@ -61,7 +61,7 @@ export const EMOTIONS = [
         ]
     },
     {
-        name: 'Peaceful',
+        name: 'neutral', // Mapped from Peaceful
         description: 'Calm, serene, and relaxing.',
         icon: EnergeticIcon,
         color: 'text-green-300',
@@ -73,45 +73,9 @@ export const EMOTIONS = [
         ]
     },
     {
-        name: 'Joy-Anger',
-        description: 'Triumphant, righteous fury.',
+        name: 'disgust', // Mapped from Sad-Anger
+        description: 'Feeling aversion or strong disapproval.',
         icon: AngryIcon,
-        color: 'text-orange-400',
-        gradient: 'from-orange-500/10 to-[#0a0a12]',
-        recommendations: [
-            { title: 'Power', artist: 'Kanye West' },
-            { title: 'Survivor', artist: 'Destiny\'s Child' },
-            { title: 'Eye of the Tiger', artist: 'Survivor' }
-        ]
-    },
-    {
-        name: 'Joy-Surprise',
-        description: 'Delightful astonishment.',
-        icon: JoyfulIcon,
-        color: 'text-pink-400',
-        gradient: 'from-pink-500/10 to-[#0a0a12]',
-        recommendations: [
-            { title: 'September', artist: 'Earth, Wind & Fire' },
-            { title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars' },
-            { title: 'Sugar', artist: 'Maroon 5' }
-        ]
-    },
-    {
-        name: 'Joy-Excitement',
-        description: 'Bursting with positive energy.',
-        icon: HappyIcon,
-        color: 'text-lime-300',
-        gradient: 'from-lime-500/10 to-[#0a0a12]',
-        recommendations: [
-            { title: 'Levitating', artist: 'Dua Lipa' },
-            { title: 'Shut Up and Dance', artist: 'Walk The Moon' },
-            { title: 'Shake It Off', artist: 'Taylor Swift' }
-        ]
-    },
-    {
-        name: 'Sad-Anger',
-        description: 'Frustrated and feeling down.',
-        icon: SadIcon,
         color: 'text-purple-400',
         gradient: 'from-purple-500/10 to-[#0a0a12]',
         recommendations: [
