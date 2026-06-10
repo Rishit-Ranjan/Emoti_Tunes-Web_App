@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
-const AudioView = ({ onCapture, onClose, onError }) => {
+const AudioView = ({ onCapture, onClose, onError, isSidebarOpen }) => {
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const mediaRecorderRef = useRef(null);
@@ -130,7 +130,7 @@ const AudioView = ({ onCapture, onClose, onError }) => {
     };
 
     const audioContent = (
-        <div className="fixed top-0 bottom-0 left-72 right-0 z-40 flex items-center justify-center p-4 md:p-8 animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
+        <div className={`fixed top-0 bottom-0 ${isSidebarOpen ? 'left-72' : 'left-0'} right-0 z-40 flex items-center justify-center p-4 md:p-8 animate-in fade-in zoom-in-95 duration-500 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
             <div className="absolute inset-0 bg-[#0a0a12]/95 backdrop-blur-3xl" onClick={closeAudio}></div>
             
             <div className="relative w-full max-w-4xl aspect-video bg-[#12121e] rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(139,92,246,0.3)] border border-violet-500/20 flex flex-col items-center justify-center p-12 group">

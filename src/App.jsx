@@ -43,6 +43,7 @@ const App = () => {
     const [loadingMessage, setLoadingMessage] = useState('');
     const [error, setError] = useState(null);
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
         const handleOnline = () => {
@@ -334,7 +335,7 @@ const App = () => {
 
         switch (view) {
             case 'camera': return <CameraView onCapture={handleCapture} onClose={goBack} onError={setError}/>;
-            case 'mic': return <AudioView onCapture={handleAudioCapture} onClose={goBack} onError={setError}/>;
+            case 'mic': return <AudioView onCapture={handleAudioCapture} onClose={goBack} onError={setError} isSidebarOpen={isSidebarOpen}/>;
             case 'playlist': return (
                 <PlaylistDisplay 
                     playlist={playlist} 
@@ -424,26 +425,37 @@ const App = () => {
             {isOffline && <OfflineBanner />}
 
             {/* Sidebar */}
-            <div className="w-72 bg-[#080b1a] border-r border-white/10 flex flex-col pt-10 px-6 z-40 shadow-2xl transition-colors duration-500">
-                <div className="flex items-center space-x-4 mb-14 px-2 hover:scale-105 transition-transform cursor-pointer group" onClick={() => navigateTo('home')}>
-                    <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-cyan-400 rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(139,92,246,0.3)] group-hover:rotate-12 transition-all">
-                        <img src="/logo.png" className="w-7 h-7" alt="" />
+            <div className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarOpen ? 'w-72 px-6' : 'w-0 px-0 border-none shadow-none'} bg-[#080b1a] border-r border-white/10 flex flex-col pt-10 z-[100] shadow-2xl relative`}>
+                {/* Sidebar Toggle Button */}
+                <button 
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+                    className={`absolute top-6 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 w-12 h-12 rounded-2xl bg-[#1a1a2e] flex items-center justify-center text-cyan-400/60 hover:text-cyan-400 hover:scale-110 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] active:scale-95 border border-white/10 shadow-xl ${isSidebarOpen ? 'right-0 translate-x-1/2' : 'left-4'}`}
+                    title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+                >
+                    <svg className={`w-6 h-6 transition-transform duration-500 ${isSidebarOpen ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <div className={`flex flex-col flex-1 transition-all duration-500 ease-in-out whitespace-nowrap ${isSidebarOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                    <div className="flex items-center space-x-4 mb-14 px-2 hover:scale-105 transition-transform cursor-pointer group" onClick={() => navigateTo('home')}>
+                        <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-cyan-400 rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(139,92,246,0.3)] group-hover:rotate-12 transition-all">
+                            <img src="/logo.png" className="w-7 h-7" alt="" />
+                        </div>
+                        <h1 className="text-2xl font-black tracking-tighter uppercase leading-none">Emoti<br/><span className="text-cyan-400">Tunes</span></h1>
                     </div>
-                    <h1 className="text-2xl font-black tracking-tighter uppercase leading-none">Emoti<br/><span className="text-cyan-400">Tunes</span></h1>
+
+                    <nav className="space-y-4 flex-1">
+                        <button onClick={() => navigateTo('home')} className={`w-full flex items-center space-x-5 px-5 py-4 rounded-2xl transition-all group ${view === 'home' ? 'bg-white/5 text-cyan-400' : 'text-violet-200/40 hover:text-white hover:bg-white/5'}`}>
+                            <div className={`w-6 h-6 ${view === 'home' ? 'text-cyan-400' : 'text-current transition-colors'} group-hover:scale-110`}><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></div>
+                            <span className="font-black uppercase text-xs tracking-[0.2em]">Home</span>
+                        </button>
+                        <button onClick={() => navigateTo('library')} className={`w-full flex items-center space-x-5 px-5 py-4 rounded-2xl transition-all group ${view === 'library' ? 'bg-white/5 text-cyan-400' : 'text-violet-200/40 hover:text-white hover:bg-white/5'}`}>
+                            <div className={`w-6 h-6 ${view === 'library' ? 'text-cyan-400' : 'text-current transition-colors'} group-hover:scale-110`}><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
+                            <span className="font-black uppercase text-xs tracking-[0.2em]">Library</span>
+                        </button>
+                    </nav>
                 </div>
-
-                <nav className="space-y-4 flex-1">
-                    <button onClick={() => navigateTo('home')} className={`w-full flex items-center space-x-5 px-5 py-4 rounded-2xl transition-all group ${view === 'home' ? 'bg-white/5 text-cyan-400' : 'text-violet-200/40 hover:text-white hover:bg-white/5'}`}>
-                        <div className={`w-6 h-6 ${view === 'home' ? 'text-cyan-400' : 'text-current transition-colors'} group-hover:scale-110`}><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></div>
-                        <span className="font-black uppercase text-xs tracking-[0.2em]">Home</span>
-                    </button>
-                    <button onClick={() => navigateTo('library')} className={`w-full flex items-center space-x-5 px-5 py-4 rounded-2xl transition-all group ${view === 'library' ? 'bg-white/5 text-cyan-400' : 'text-violet-200/40 hover:text-white hover:bg-white/5'}`}>
-                        <div className={`w-6 h-6 ${view === 'library' ? 'text-cyan-400' : 'text-current transition-colors'} group-hover:scale-110`}><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
-                        <span className="font-black uppercase text-xs tracking-[0.2em]">Library</span>
-                    </button>
-                </nav>
-
-
             </div>
 
             {/* Main Area */}
@@ -451,6 +463,8 @@ const App = () => {
                 {/* Header (Sticky Search Area) */}
                 <header className="h-24 px-10 flex items-center justify-between z-50 bg-[#080b1a]/80 backdrop-blur-3xl border-b border-white/10 sticky top-0 left-0 right-0 transition-colors duration-500">
                     <div className="flex items-center space-x-4">
+                        {/* Spacer to prevent overlap with the sidebar toggle when it's closed */}
+                        <div className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarOpen ? 'w-0' : 'w-16'}`}></div>
                         <button onClick={goBack} disabled={historyIndex === 0} className="w-12 h-12 rounded-2xl bg-[#1a1a2e] flex items-center justify-center text-white/40 hover:text-white hover:scale-110 active:scale-95 transition-all border border-white/10 shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M15 19l-7-7 7-7"/></svg>
                         </button>
@@ -473,7 +487,7 @@ const App = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 w-full bg-[#0a0a12] flex flex-col relative overflow-y-auto scrollbar-hide z-10 transition-all duration-500">
+                <main className="flex-1 w-full bg-[#0a0a12] flex flex-col relative overflow-y-auto scrollbar-hide z-10 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]">
                     <div className="flex-1 flex flex-col min-h-full">
                         {renderContent()}
                     </div>
