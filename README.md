@@ -46,7 +46,7 @@ npm run dev
 
 ## 📝Notes
 1. A working internet connection is required for AI playlist generation and song playback.
-2. If Gemini is unavailable or the API key is missing, EmotiTunes uses curated fallback playlists to keep the experience alive.
+2. If Gemini is unavailable or the API key is missing/ quota reached, EmotiTunes uses curated fallback playlists to keep the experience alive.
 3. Browser permissions are required for camera and microphone access.
 
 ## 💡Tip
