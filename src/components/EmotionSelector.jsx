@@ -49,7 +49,7 @@ const EmotionSelector = ({ emotions, onSelect, onOpenCamera, onOpenMic, isOfflin
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-6">
-                    {emotions.map((emotion, idx) => (
+                    {emotions.map((emotion) => (
                         <div 
                             key={emotion.name} 
                             onClick={() => onSelect(emotion)} 
