@@ -53,12 +53,16 @@ npm run dev
 Use the camera or microphone options for the most immersive mood discovery experience, then explore the generated playlist and save favorites to your library.
 
 **Home page**<br/><br/>
-<img width="1825" height="910" alt="image" src="https://github.com/user-attachments/assets/90a2c337-610b-4ae7-8a75-698792eb03a5" /><br/><br/>
+<img width="1887" height="907" alt="image" src="https://github.com/user-attachments/assets/f29cf383-d66f-4c4b-bc54-fe261239b932" />
+<br/><br/>
 
-<img width="1810" height="902" alt="image" src="https://github.com/user-attachments/assets/8b103ec1-bc0a-4370-8075-b4191bbfedc3" /><br/><br/>
+<img width="1887" height="907" alt="image" src="https://github.com/user-attachments/assets/d7ec645c-3ec0-4f64-9fc0-b7512a705441" />
+<br/><br/>
 
-**Joy Mood**<br/><br/>
-<img width="1800" height="911" alt="image" src="https://github.com/user-attachments/assets/4b42ae0b-ec01-4e2f-84d6-a9bf94ce08a0" /><br/><br/>
+**Happy Mood**<br/><br/>
+<img width="1887" height="905" alt="image" src="https://github.com/user-attachments/assets/1a49ed8d-11ba-4f93-aa92-8fe2a853b617" />
+<br/><br/>
 
 **Library**<br/><br/>
-<img width="1800" height="905" alt="image" src="https://github.com/user-attachments/assets/c9dbe233-3be7-4fe5-8b58-646f5962ea28" />
+<img width="1885" height="906" alt="image" src="https://github.com/user-attachments/assets/ac307489-3bdc-4f71-9086-f9f8cb38eeaa" />
+
